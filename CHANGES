@@ -1,0 +1,36 @@
+v0.1.3:
++ all tracks: pressing all tracks again will return to previous group
+- delete: fixed the dialog message when deleting a track (not a group track)
+- group filter: enabling group filter now focuses the filter editline
+- in groups menu: groups are now listed alphabetically
+- id3v1: id3v1 reader fixed
++ merge: now allowed in groupmode (maybe it's confusing)
++ group delete: deleting a group doesn't reset the group filter
++ sort: sorting grouptracks by number is remembered between all tracks/groups switches (so switching back and forth between groups and all tracks doesn't screw up the ordering)
++ status: reworked the status line, now it provides some basic statistics about the tracks (counts and ratings)
+- adding tracks to a group with the same tracks already present didn't work (it was impossible to make duplicities except through import)
++ detachcopy: make a copy of a track in a group (grouptrack) and replace the current link in the group with it
++ relink: change the grouptrack to link to some other similar track
+
+v0.1.2:
+- import: fixed importing mp3 without track number
++ addtogroup: now supported for grouptracks (group mode) too
++ import: tracks column now displays best match indicators
++ track rating in tooltip is now displayed as a set of stars, plus and dashes
++ track and import tables now both have smaller row height and alternating row colors
++ import: it is now possible to directly select multiple cuesheets 
++ import: select best ('B' key)
++ import: quick resolve (select best track for **, ++, create new for no match, the rest is left as is)
+- tables: columns are now resized properly tanks to wordWrap=False
+- both tables: removed grid
++ filter: now doesn't reset automatically, theres a button and menu entry for it
++ filter: a history of last 20 filter rules is now available
++ filter: new advanced filter option !g: allow query groups (by names), note that its also possible to use it with groups and therefore it is possible to query and intersection of groups
++ import: * + _ indicators now work by parts, artist and name are evaluated separately
+- both tables: fixed context menu position
+
+v0.1.1:
++ import: nameCutToSearchKey - make new search key from track name, but remove any parenthesis and their contents (shortcut ")
++ import: found tracks now marks verbatim matches with a star **, ++ if search strings match
+- import: fixed, cue files are expected to be in utf-8 but if they are not (on UnicodeDecodeError) latin1 is used
+- merge: fixed, now the links between groups and tracks dont disappear
