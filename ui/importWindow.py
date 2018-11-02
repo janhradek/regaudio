@@ -9,15 +9,15 @@ from ui.tracksdelegate import TracksDelegate
 class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
 
     def __init__(self, importdata, parent=None):
-        super().__init__(parent)        
+        super().__init__(parent)
         self.setupUi(self)
-        
+
         # setup model (data)
-        self.importdata = importdata 
+        self.importdata = importdata
         mdl = ImportModel(self.importdata)
         mdl.feedback.connect(self.modelfeedback)
         self.tableimport.setModel(mdl)
-        
+
         # setup table
         self.tableimport.setItemDelegate(TracksDelegate(mdl))
         self.tableimport.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -26,7 +26,7 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
             QtGui.QAbstractItemView.SelectedClicked |
             QtGui.QAbstractItemView.EditKeyPressed)
         self.tableimport.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
-        
+
         # setup group controls
         self.groupnamecheck(self.importdata.name)
         self.groupnameshow()
@@ -39,10 +39,10 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
             action = QtGui.QAction(self)
             action.setText(act[0])
             action.triggered.connect(act[1])
-            self.groupmenu.addAction(action)    
-        self.groupnamechangebtn.setMenu(self.groupmenu)        
-        self.groupnamechangebtn.clicked.connect(self.groupnamechangebtn.showMenu)                
-        
+            self.groupmenu.addAction(action)
+        self.groupnamechangebtn.setMenu(self.groupmenu)
+        self.groupnamechangebtn.clicked.connect(self.groupnamechangebtn.showMenu)
+
         # setup status line and buttons
         self.okbtn.clicked.connect(self.accept)
         self.cancelbtn.clicked.connect(self.reject)
@@ -76,8 +76,8 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
                         ]], # submenu
                     ["Toggle new", self.trackToggleNewFlag, "."],
                     [""],
-                    ["Add new track", self.trackAdd, "N"], 
-                    ["Delete track", self.trackDelete], 
+                    ["Add new track", self.trackAdd, "N"],
+                    ["Delete track", self.trackDelete],
                     [""],
                     ["Reset all to original", self.trackReset, "R"],
                     ["Sanitize artist and name", self.trackSanitizeArtistName, "S"],
@@ -118,8 +118,8 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
                 action.triggered.connect(aa[1])
                 if len(aa) == 3:
                     action.setShortcut(QtGui.QKeySequence.fromString(aa[2])) #"Ctrl+"
-                tt.addAction(action)    
-                self.tableimport.addAction(action)    
+                tt.addAction(action)
+                self.tableimport.addAction(action)
         self.statusUpdate()
         self.tableimport.resizeColumnsToContents()
         self.tableimport.resizeRowsToContents()
@@ -129,7 +129,7 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
         if e.key() == QtCore.Qt.Key_Escape or e.key() == QtCore.Qt.Key_Enter:
             return
         super().keyPressEvent(e)
-    
+
     def groupnameshow(self):
         """show the groupname, cut it from the left if it is too long (80 chars max)"""
         MAXCHARS=80
@@ -147,7 +147,7 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
             QtGui.QMessageBox.warning(self, "Group name restore",
                     "The group name was not changed.")
             return
-        ok = QtGui.QMessageBox.question(self, "Group name restore", 
+        ok = QtGui.QMessageBox.question(self, "Group name restore",
                 "Restore the original name?\n\n" + self.importdata.namebackup,
                 QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
         if not ok:
@@ -170,11 +170,11 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
         idx = lst.index(sel)
         if idx == 0:
             newname = self.importdata.getcleanname()
-        elif idx == 1: 
+        elif idx == 1:
             newname = self.importdata.getcleanname(removechars=None)
         elif idx == 2:
             newname = self.importdata.getcleanname(cutleft=None)
-        ok = QtGui.QMessageBox.question(self, "Group name cleanup", 
+        ok = QtGui.QMessageBox.question(self, "Group name cleanup",
                 "Is this new name ok?\n\n" + newname,
                 QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
         if not ok:
@@ -182,11 +182,11 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
         self.groupnamecheck(newname)
         self.groupnameshow()
         self.statusUpdate()
-    
+
     def groupnamechange(self):
         newname, ok = QtGui.QInputDialog.getText(self,
                 "Group name" # quickfix for the narrow input (below)
-                , "New group name: " + " "*100 
+                , "New group name: " + " "*100
                 , text=self.importdata.name)
         if not ok:
             return
@@ -202,9 +202,9 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
             ok = True
             if not self.importdata.checknamedup(newname):
                 break
-            newname, ok = QtGui.QInputDialog.getText(self, "Group name", 
+            newname, ok = QtGui.QInputDialog.getText(self, "Group name",
                     "This groupname already exist!\n"
-                    "New group name: " + " "*100 
+                    "New group name: " + " "*100
                     , text=newname)
             if not ok:
                 # restore original name
@@ -215,43 +215,43 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
                     ii += 1
                     newname = self.importdata.name + " DUP" + str(ii)
                 break
-            
+
         self.importdata.name = newname
-        
+
     def trackContextMenuShow(self, point):
         point.setX(point.x() + self.tableimport.verticalHeader().width())
         point.setY(point.y() + self.tableimport.horizontalHeader().height())
         self.contextMenu.exec_(self.tableimport.mapToGlobal(point))
-    
+
     def trackUpdateExistingMenu(self):
         self.existingmenu.clear()
-        
-        tt = self.tableimport  
+
+        tt = self.tableimport
         rows = tt.model().getSelection(tt.selectedIndexes())
-        
+
         if len(rows) != 1:
             return
         row = rows[0]
-                
+
         ii = self.importdata.lst[row]
         if ii.tracks == None or len(ii.tracks) == 0:
             return
-        
+
         for tt in ii.tracks:
             receiver = lambda row=row, track=tt: self.trackSelectExisting(row, track)
             self.existingmenu.addAction(tt.menucaption(ii), receiver)
 
     def trackSelectExisting(self, row, track):
-        ee = self.importdata.lst[row] 
+        ee = self.importdata.lst[row]
         ee.selecttrack(track)
-        
+
         # FIXME - do this nicer
         self.tableimport.model().layoutChanged.emit()
-        
+
         self.statusUpdate()
 
     def trackSelectBest(self):#, row):
-        tt = self.tableimport  
+        tt = self.tableimport
         rows = tt.model().getSelection(tt.selectedIndexes())
 
         warning = False
@@ -270,11 +270,11 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
             self.tableimport.model().layoutChanged.emit()
         if warning:
             QtGui.QMessageBox.warning(self, "Warning", "Some tracks have no best matching track!")
-            
+
         self.statusUpdate()
 
     def trackQuickResolve(self):
-        tt = self.tableimport  
+        tt = self.tableimport
         rows = tt.model().getSelection(tt.selectedIndexes())
 
         someset = False
@@ -294,13 +294,13 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
         if someset:
             # FIXME - do this nicer
             self.tableimport.model().layoutChanged.emit()
-            
+
         self.statusUpdate()
-        
+
     def trackCreateNew(self):
-        tt = self.tableimport  
+        tt = self.tableimport
         rows = tt.model().getSelection(tt.selectedIndexes())
-        
+
         warning = False
         someset = False
         for row in rows:
@@ -310,35 +310,35 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
                 continue
             someset = True
             ee.track = True
-        
+
         if someset:
             # FIXME - do this nicer
             self.tableimport.model().layoutChanged.emit()
         if warning:
             QtGui.QMessageBox.warning(self, "Warning", "Some tracks lack artist or name!")
-            
+
         self.statusUpdate()
 
     def trackrating(self, rr):
-        tt = self.tableimport  
+        tt = self.tableimport
         rows = tt.model().getSelection(tt.selectedIndexes())
 
         for row in rows:
-            tt.model().rating(row, rr)            
+            tt.model().rating(row, rr)
         self.tableimport.model().layoutChanged.emit()
-        self.statusUpdate()  
+        self.statusUpdate()
 
     def trackToggleNewFlag(self):
-        tt = self.tableimport  
+        tt = self.tableimport
         rows = tt.model().getSelection(tt.selectedIndexes())
-        
+
         for row in rows:
-            tt.model().toggleNewFlag(row)            
+            tt.model().toggleNewFlag(row)
         self.tableimport.model().layoutChanged.emit()
-        self.statusUpdate()  
+        self.statusUpdate()
 
     def trackAdd(self):
-        tt = self.tableimport                 
+        tt = self.tableimport
         index = tt.selectionModel().currentIndex()
         model = tt.model()
 
@@ -346,31 +346,31 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
             return
 
     def trackDelete(self):
-        tt = self.tableimport                 
+        tt = self.tableimport
         rows = tt.model().getSelection(tt.selectedIndexes())
         rowsranges = utils.re_rangebyone(sorted(rows), count=True)
-        
+
         # delete tracks from bottom to keep the right indices
         for s, e in reversed(rowsranges):
             tt.model().removeRows(s,e)
-            
-        self.statusUpdate() 
+
+        self.statusUpdate()
 
     def trackReset(self):
         tt = self.tableimport
         rows = tt.model().getSelection(tt.selectedIndexes())
-        
+
         for row in rows:
-            tt.model().trackReset(row)            
-        self.statusUpdate()  
+            tt.model().trackReset(row)
+        self.statusUpdate()
 
     def trackSanitizeArtistName(self):
         tt = self.tableimport
         rows = tt.model().getSelection(tt.selectedIndexes())
-        
+
         for row in rows:
-            tt.model().sanitizeArtistName(row)            
-    
+            tt.model().sanitizeArtistName(row)
+
     def trackSearchToArtistName(self):
         tt = self.tableimport
         rows = tt.model().getSelection(tt.selectedIndexes())
@@ -378,7 +378,7 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
         for row in rows:
             tt.model().searchToArtistName(row)
         self.statusUpdate()
-        
+
     def trackArtistNameToSearch(self):
         tt = self.tableimport
         rows = tt.model().getSelection(tt.selectedIndexes())
@@ -420,10 +420,10 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
     def modelfeedback(self, ss):
         if ss == "updatestatus":
             self.statusUpdate()
-            
+
     def statusUpdate(self):
         """ enable/disable ok btn, show some information on the status line """
-        total, new, selected, left, warnnum, warngroup = self.importdata.getStatus()        
+        total, new, selected, left, warnnum, warngroup = self.importdata.getStatus()
         warn = ""
         if warnnum:
             warn = "!!NUMBERS!!"
@@ -437,7 +437,7 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
         self.ignorewarningscb.setVisible(warnnum or warngroup)
         enable = (left == 0) and (self.ignorewarningscb.isChecked() or not warn)
         self.okbtn.setEnabled(enable)
-    
+
     def statusSetIgnoreWarnings(self, checked):
         self.statusUpdate()
 
@@ -449,11 +449,11 @@ class ImportModel(QtCore.QAbstractTableModel):
     # a feedback signal for the window - if new filter rules means that inputs should change
     # this feedback will be used to notify the mainwindow
     feedback = QtCore.pyqtSignal(str)#, str)
-    
+
     def __init__(self, importdata, parent=None):
         super().__init__(parent)
         self.importdata = importdata
-        
+
     def headerData(self, section, orientation=QtCore.Qt.Horizontal, role=QtCore.Qt.DisplayRole):
         if role != QtCore.Qt.DisplayRole:
             return None
@@ -461,24 +461,24 @@ class ImportModel(QtCore.QAbstractTableModel):
             return self.importdata.header(section)
         else:
             return section
-        
+
     def columnCount(self, parent=None):
-        return self.importdata.headerCount()               
-    
+        return self.importdata.headerCount()
+
     def rowCount(self, parent=None):
         return self.importdata.rowCount()
-                   
+
     def data(self, index, role=QtCore.Qt.DisplayRole):
         if not index.isValid():
             return None
-        
-        if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:             
-            return self.importdata.data(index.row(), index.column(), (role == QtCore.Qt.EditRole))           
+
+        if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:
+            return self.importdata.data(index.row(), index.column(), (role == QtCore.Qt.EditRole))
         elif role == QtCore.Qt.ToolTipRole:
-            return self.importdata.tip(index.row(), index.column())           
+            return self.importdata.tip(index.row(), index.column())
         else:
-            return None        
-        
+            return None
+
     def flags(self, index):
         if not index.isValid():
             return QtCore.Qt.ItemIsEnabled
@@ -486,7 +486,7 @@ class ImportModel(QtCore.QAbstractTableModel):
             return super().flags(index) | QtCore.Qt.ItemIsEditable
         else:
             return super().flags(index)
-        
+
     def getSelection(self, selected):
         rows = []
         def processIndex(idx):
@@ -496,8 +496,8 @@ class ImportModel(QtCore.QAbstractTableModel):
             return rows
         for idx in selected:
             processIndex(idx)
-        return sorted(rows)        
-    
+        return sorted(rows)
+
     def setData(self, index, value, role=QtCore.Qt.DisplayRole):
         if index.isValid() and role == QtCore.Qt.EditRole:
             morechanged, ok = self.importdata.setdata(index.row(), index.column(), value)
@@ -507,19 +507,19 @@ class ImportModel(QtCore.QAbstractTableModel):
                 for col in morechanged:
                     idx = self.createIndex(index.row(), col , object=0)
                     self.dataChanged.emit(index, index)
-            self.feedback.emit("updatestatus")        
+            self.feedback.emit("updatestatus")
             return True
         return False
 
     def insertRows(self, position, rows, index=None):
         if index == None:
             index = QtCore.QModelIndex()
-                
+
         self.beginInsertRows(QtCore.QModelIndex(), position, position+rows-1)
         self.importdata.insertrows(position, rows)
         self.endInsertRows()
         return True
-    
+
     def removeRows(self, position, rows, index=None):
         '''
         '''
@@ -528,58 +528,58 @@ class ImportModel(QtCore.QAbstractTableModel):
         self.beginRemoveRows(QtCore.QModelIndex(), position, position+rows-1)
         self.importdata.removerows(position, rows)
         self.endRemoveRows()
-        self.feedback.emit("updatestatus")        
+        self.feedback.emit("updatestatus")
         return True
-    
+
     def trackReset(self, row):
         self.importdata.reset(row)
         self.dataChanged.emit(self.createIndex(row, 0), self.createIndex(row, self.importdata.headerCount()-1))
-        self.feedback.emit("updatestatus")        
+        self.feedback.emit("updatestatus")
 
     def sanitizeArtistName(self, row):
         self.importdata.sanitizeArtistName(row)
         self.dataChanged.emit(self.createIndex(row, 0), self.createIndex(row, self.importdata.headerCount()-1))
-        self.feedback.emit("updatestatus")        
-        
+        self.feedback.emit("updatestatus")
+
     def searchToArtistName(self, row):
         self.importdata.searchToArtistName(row)
         self.dataChanged.emit(self.createIndex(row, 0), self.createIndex(row, self.importdata.headerCount()-1))
-        self.feedback.emit("updatestatus")        
-        
+        self.feedback.emit("updatestatus")
+
     def artistNameToSearch(self, row):
         self.importdata.artistNameToSearch(row)
         self.dataChanged.emit(self.createIndex(row, 0), self.createIndex(row, self.importdata.headerCount()-1))
-        self.feedback.emit("updatestatus")        
+        self.feedback.emit("updatestatus")
 
     def artistToSearch(self, row):
         self.importdata.artistToSearch(row)
         self.dataChanged.emit(self.createIndex(row, 0), self.createIndex(row, self.importdata.headerCount()-1))
-        self.feedback.emit("updatestatus")        
+        self.feedback.emit("updatestatus")
 
     def nameToSearch(self, row):
         self.importdata.nameToSearch(row)
         self.dataChanged.emit(self.createIndex(row, 0), self.createIndex(row, self.importdata.headerCount()-1))
-        self.feedback.emit("updatestatus")        
+        self.feedback.emit("updatestatus")
 
     def nameCutToSearch(self, row):
         self.importdata.nameCutToSearch(row)
         self.dataChanged.emit(self.createIndex(row, 0), self.createIndex(row, self.importdata.headerCount()-1))
-        self.feedback.emit("updatestatus")        
+        self.feedback.emit("updatestatus")
 
     def sanitizeTrackNo(self):
         self.importdata.sanitizeTrackNo()
         self.dataChanged.emit(self.createIndex(0, 0), self.createIndex(self.importdata.rowCount(), self.importdata.headerCount()-1))
-        self.feedback.emit("updatestatus")        
+        self.feedback.emit("updatestatus")
 
     def rating(self, row, rr):
         self.importdata.rating(row, rr)
         self.dataChanged.emit(self.createIndex(row, 0), self.createIndex(row, self.importdata.headerCount()-1))
-        self.feedback.emit("updatestatus")        
+        self.feedback.emit("updatestatus")
 
     def toggleNewFlag(self, row, value=None):
         self.importdata.toggleNewFlag(row, value)
         self.dataChanged.emit(self.createIndex(row, 0), self.createIndex(row, self.importdata.headerCount()-1))
-        self.feedback.emit("updatestatus")        
+        self.feedback.emit("updatestatus")
 
     def isStar(self, index):
         return self.importdata.isStar(index.column())

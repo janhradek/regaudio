@@ -23,54 +23,54 @@ class Model(object):
             dbfile = CFG["regaudio"]["db"]
         self.engine = sqlalchemy.create_engine('sqlite:///' + dbfile)#, echo=True)
         self.SessionMaker = sqlalchemy.orm.sessionmaker(bind=self.engine)
-        
+
         if not os.path.exists(dbfile):
             Base.metadata.create_all(self.engine)
             self.insertExampleData()
 
         self.tracks = TrackModel(self)
         self.groups = GroupModel(self)
-        
+
     def insertExampleData(self):
         self.getSession()
         g1 = Group("Group 1")
         g2 = Group("Group 2")
-        g2.fav = True 
-        
+        g2.fav = True
+
         t1 = Track("Bob", "Hello World!", False, 1)
         t2 = Track("Joe", "How are you doing?", True, 3)
         t3 = Track("Jim", "Can't stop dancing", False, 5)
         t4 = Track("Tom", "A simple melody", True, 9)
-        
+
         gt1_1 = GroupTrack(1, 0, 100)
         gt1_1.track = t1
         gt1_2 = GroupTrack(2, 100, 200)
         gt1_2.track = t2
         g1.grouptracks.append(gt1_1)
         g1.grouptracks.append(gt1_2)
-        
+
         gt2_2 = GroupTrack(1, 0, 200)
         gt2_2.track = t2
         gt2_3 = GroupTrack(2, 200, 150)
-        gt2_3.track = t3        
+        gt2_3.track = t3
         g2.grouptracks.append(gt2_2)
         g2.grouptracks.append(gt2_3)
 
         self.session.add_all([g1, g2, t1, t2, t3, t4, gt1_1, gt1_2, gt2_2, gt2_3])
-        self.session.commit()                
-        
+        self.session.commit()
+
     def getTracks(self):
         return self.tracks
-    
+
     def getGroups(self):
-        return self.groups    
-        
+        return self.groups
+
     def getSession(self):
         # always only one session
         if self.session == None:
-            self.session = self.SessionMaker()            
+            self.session = self.SessionMaker()
         return self.session
-    
+
 class GroupModel(object):
     '''
     to be used as lst for groups table
@@ -81,24 +81,24 @@ class GroupModel(object):
         self.lst = [None] # all the groups, the first being None representin all the tracks
         self.session = None
         self.favs = 0
-        
+
         self.loadgroups()
-        
+
     def _checksession(self):
         if self.session == None:
-            self.session = self.model.getSession()            
-    
+            self.session = self.model.getSession()
+
     def loadgroups(self):
         '''
         get all the groups, ordered by favourite and name
-        
+
         the list has one special value at the beginning - None - which resembles the all the tracks
         '''
         self._checksession()
         q = (self.session.query(Group)
                 .order_by(sqlalchemy.sql.expression.asc(Group.fav))
                 .order_by(Group.name).order_by(Group.idno))
-        
+
         self.lst = q.all()
         if self.lst == None or len(self.lst) == 0:
             self.lst = [None]
@@ -106,10 +106,10 @@ class GroupModel(object):
             self.lst.insert(0, None)
 
         self.resort()
-                
+
     def resort(self):
         '''
-        sort the list again        
+        sort the list again
         '''
         self.favs = 0
         def key(g):
@@ -118,15 +118,15 @@ class GroupModel(object):
             if g.fav:
                 self.favs += 1
                 return "    " + g.name.lower()
-            return g.name.lower()                         
+            return g.name.lower()
         self.lst = sorted(self.lst,key=key)
-        
+
     def checkidx(self, idx):
         """True if the index points to a VALID group (ie. not All Tracks)"""
         if idx == 0 or idx >= len(self.lst):
             return False
-        return True        
-    
+        return True
+
     def canfavorite(self, idx):
         return self.checkidx(idx)
 
@@ -134,103 +134,103 @@ class GroupModel(object):
         if not idx:
             return False
         return lst[idx].fav
-    
+
     def favorite(self, idx):
         '''
         switch favourite on the given group (by idx)
-        
+
         favourite cannot be changed on all the tracks (None)
         changes order immediately
         '''
-        
+
         if not self.checkidx(idx):
             return -1
-                
+
         g = self.lst[idx]
-        g.fav = not g.fav        
+        g.fav = not g.fav
         idno = g.idno
-        
+
         self._checksession()
         self.session.add(g)
         self.session.commit()
-        
+
         self.resort()
-        
+
         for i in range(len(self.lst)):
             if self.lst[i] != None and self.lst[i].idno == idno:
                 return i
-                            
+
         return -1
-    
+
     def deletegroup(self, idx):
         self.deletegroups(idx, 1)
-    
+
     def deletegroups(self, idx, no):
         '''
-        remove a serie of groups given as interval index + no 
-        
+        remove a serie of groups given as interval index + no
+
         removing the group doesn't remove the tracks but removes the grouptrack data
         '''
         if not self.checkidx(idx) or not self.checkidx(idx+no-1):
             return False
-        
+
         self._checksession()
-        
-        while no != 0:        
+
+        while no != 0:
             g = self.lst[idx]
-            if g.fav:        
+            if g.fav:
                 self.favs -= 1
             self.session.delete(g)
             del(self.lst[idx])
             no -= 1
-         
+
         self.session.commit()
         return True
-        
+
     def groupexists(self, name):
         self._checksession()
         return (self.session.query(Group).filter(Group.name == name).count() != 0)
-    
+
     def gidToIdx(self, gid):
         '''
         groud id gid to list index
         '''
         i = 0
-        for gg in self.lst:            
+        for gg in self.lst:
             if gg != None and gg.idno == gid:
                 return i
             i += 1
         return -1
-        
+
     def newgroup(self, name):
         '''
         create a group and insert it to the list in the position
-        '''        
+        '''
         self._checksession()
-        
+
         g = Group(name)
         g.fav = True
         self.lst.append(g)
         self.session.add(g)
         self.session.commit()
-        
+
         self.resort()
-        
+
         return self.lst.index(g)
-    
+
     def renamegroup(self, idx, newname):
         if idx == 0:
             return -1
-          
+
         self._checksession()
-        
+
         g = self.lst[idx]
         g.name = newname
         self.session.add(g)
         self.session.commit()
-        
+
         self.resort()
-        
+
         return self.lst.index(g)
 
     def getcaptions(self, includeall=False):
@@ -238,13 +238,13 @@ class GroupModel(object):
             return [(g.menucaption() if g else Group.CaptionAllTracks) for g in self.lst]
         else:
             return [(g.menucaption()) for g in self.lst if g]
-    
+
 class TrackModel(object):
     '''
     to be used as lst for model for tracks table and grouptracks
-    
+
     represents all the tracks or tracks within a group
-    '''        
+    '''
     trtable = str.maketrans(
             " `’~!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?",
             "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
@@ -255,19 +255,19 @@ class TrackModel(object):
     issuesmagic = cfgvaltolistlist(CFG["regaudio"]["search ignore magic"], extend=True)
     issuesmagic = ["%" + x.strip().lower().replace(" ", "%") + "%" for x in issuesmagic ]
 
-    def __init__(self, model):        
+    def __init__(self, model):
         self.model = model
         self.gtmode = False # True = GroupTracks mode (False = Tracks Only)
         self.group = ""
         self.session = None
-        self.lst = None    
-        
+        self.lst = None
+
         # previous values of selections
         self.prevrule = "-1"
         self.prevgroup = "" # was "-1"
         self.prevmax = -1
         self.prevpage = -1
-        
+
         # this is a list containing column indices used for sorting
         # negative values means desc sorting
         # new values are added to the beginning
@@ -276,17 +276,17 @@ class TrackModel(object):
         # when gtmode is switched it is sometimes usefull to restore previous ordering
         self.ordbackup = 1
 
-        # it would be better to call setfilter now, but the window isnt working yet 
+        # it would be better to call setfilter now, but the window isnt working yet
         # so theres no point doing it yet
         #self.setfilter()
 
         # statistics
         self.stats = model.stats
-        
+
     def _checksession(self):
         if self.session is None:
-            self.session = self.model.getSession()        
-    
+            self.session = self.model.getSession()
+
     def setfilter(self, rule="", group="", maxrows=0, page=1, orderby=None, orderbyasc=True):
         '''
         make a new query by the rule provided, get maxrows results, skip (page - 1)*maxrows results
@@ -303,17 +303,17 @@ class TrackModel(object):
 
         if self.stats.empty():
             self.stats.total = self.session.query(Track).count()
-        
+
         if rule is None and group is None:
             rule = self.prevrule
             group = self.prevgroup
             maxrows = self.prevmax
-            page = self.prevpage        
-            
+            page = self.prevpage
+
         if not type(maxrows) is int:
             maxrows = 0
-            fb.append(("max", 0))            
-        
+            fb.append(("max", 0))
+
         # when group changes, reset page; when mode changes, keep and convert sort order
         newsortcol = None
         if group != self.prevgroup:
@@ -323,12 +323,12 @@ class TrackModel(object):
                     fb.append(("sortbycol", newsortcol))
             fb.append(("page", 1))
             page = 1
-            
+
         # if max changes reset page
         if maxrows != self.prevmax:
             fb.append(("page", 1))
-            page = 1            
-        
+            page = 1
+
         # "register" new orderby
         if orderby != None:
             assert(newsortcol == None)
@@ -346,27 +346,27 @@ class TrackModel(object):
                 self.ordering.remove(-orderno)
             self.ordering.append(ordernosign)
         #print("ordering", self.ordering)
-            
-        # creating basic query    
+
+        # creating basic query
         q = None
-        if group == "":    
-            self.gtmode = False    
+        if group == "":
+            self.gtmode = False
             q = self.session.query(Track)
         else:
             self.gtmode = True
             q = self.session.query(GroupTrack).join(Track).join(Group)
             q = q.filter(GroupTrack.groupid==Group.idno).filter(Group.name==group)
-                                    
-        #rule filter 
+
+        #rule filter
         if rule != "":
             q = self.buildquery(q, rule)
 
-        #sorting - remeber the shift between orderby and orderno 
+        #sorting - remeber the shift between orderby and orderno
         if self.ordering != None and len(self.ordering) > 0:
-            for on in reversed(self.ordering):                
+            for on in reversed(self.ordering):
                 if on < 0:
-                    oby = -1 - on 
-                    ofun = sqlalchemy.sql.expression.desc                    
+                    oby = -1 - on
+                    ofun = sqlalchemy.sql.expression.desc
                 else:
                     oby = on - 1
                     ofun = sqlalchemy.sql.expression.asc
@@ -374,12 +374,12 @@ class TrackModel(object):
                     q = q.order_by(ofun(GroupTrack.colbycol(oby)))
                 else:
                     q = q.order_by(ofun(Track.colbycol(oby)))
-            
-        #by default or as a last rule, sort tracks by trackid, grouptracks by number        
+
+        #by default or as a last rule, sort tracks by trackid, grouptracks by number
         if self.gtmode:
             q = q.order_by(GroupTrack.no)
         else:
-            q = q.order_by(Track.idno)  
+            q = q.order_by(Track.idno)
 
         # query is prepared, execute it
         if maxrows == 0:
@@ -391,13 +391,13 @@ class TrackModel(object):
 
         self.stats.newfilter(self.lst, q.count(), q.filter(Track.new == True).count())
 
-        # remember filter for sorting            
+        # remember filter for sorting
         self.prevrule = rule
         self.prevgroup = group
         self.prevmax = maxrows
         self.prevpage = page
-            
-        # return lst (for convenience) and feedback        
+
+        # return lst (for convenience) and feedback
         return self.lst, fb
 
     def orderingconvert(self):
@@ -448,12 +448,12 @@ class TrackModel(object):
 
         for rr in cls.issues:
             rule = rule.replace(rr, "%")
-        
-        rule = rule.translate(TrackModel.trtable)        
+
+        rule = rule.translate(TrackModel.trtable)
 
         for rr in cls.issuesmagic:
             rule = rule.replace(rr, "%")
-            
+
         rule = rule.replace("ARTISTARTISTARTISTARTISTARTISTARTIST", "!a:")
         rule = rule.replace("NAMENAMENAMENAMENAMENAME", "!n:")
         rule = rule.replace("RATINGMORERATINGMORERATINGMORERATINGMORERATINGMORERATINGMORE", "!r:>")
@@ -461,20 +461,20 @@ class TrackModel(object):
         rule = rule.replace("RATINGRATINGRATINGRATINGRATINGRATING", "!r:")
         rule = rule.replace("NEWNEWNEWNEWNEWNEW","!*:")
         rule = rule.replace("GROUPGROUPGROUPGROUP", "!g:")
-        
+
         while "%%" in rule:
-            rule = rule.replace("%%", "%")       
-            
+            rule = rule.replace("%%", "%")
+
         # replacement from the future :)
         #import re
         #rep = {"condition1": "", "condition2": "text"} # define desired replacements here
         ## use these three lines to do the replacement
         #rep = dict((re.escape(k), v) for k, v in rep.iteritems())
         #pattern = re.compile("|".join(rep.keys()))
-        #text = pattern.sub(lambda m: rep[m.group(0)], text) 
+        #text = pattern.sub(lambda m: rep[m.group(0)], text)
 
         return rule
-    
+
     def buildquery(self, query, rule):
         """
         convert string rule to sqlaclhemy query
@@ -483,10 +483,10 @@ class TrackModel(object):
         """
 
         q = query # for convenience
-        rule = self.removeissues(rule) 
-                
+        rule = self.removeissues(rule)
+
         m = ""
-        ar = {}        
+        ar = {}
         for s in rule.split("!"):
             cut = 2
             if s.startswith("a:"):
@@ -511,7 +511,7 @@ class TrackModel(object):
             ar[m] = s[cut:].strip()
         # analyze the results a little
         #if not "artist" in ar and not "name" in ar and not "rating" in ar and not "rating>" in ar:
-        #    ar = None        
+        #    ar = None
         for rr in ["artist", "name", "rating", "rating>", "rating<", "new", "group"]:
             if rr in ar:
                 break
@@ -519,10 +519,10 @@ class TrackModel(object):
             ar = None
         if ar != None and "new" in ar:
             ar["new"] = ( ar["new"].lower() in ["","yes","true","t", "y"] )
-        
+
         commonrule = None
-        if ar == None:                
-            commonrule = '%'+rule+'%'                
+        if ar == None:
+            commonrule = '%'+rule+'%'
         else:
             if "" in ar and ar[""] != "!":
                 commonrule = '%'+ar[""]+'%'
@@ -556,26 +556,26 @@ class TrackModel(object):
 
         if commonrule:
             q = q.filter(sqlalchemy.or_(Track.artist.ilike(commonrule), Track.name.ilike(commonrule)))
-            
+
         return q
-    
+
     def filter(self, rule, maxt):
         """just query tracks by the given (possibly advanced) rule"""
         self._checksession()
-        
+
         q = self.session.query(Track)
         q = self.buildquery(q, rule)
         q.order_by(Track.artist).order_by(Track.name)
         if not maxt:
             return q.all()
-        return q[0:maxt-1]    
-    
+        return q[0:maxt-1]
+
     def datacount(self):
         """ a safe wrapper around len(self.lst) """
         if self.lst == None:
             return 0
         return len(self.lst)
-    
+
     def data(self, row, col, edit=False):
         '''
         return the entry @ row, col
@@ -586,11 +586,11 @@ class TrackModel(object):
             return None
         if self.gtmode:
             if col < 0 or col >= len(GroupTrack.headers):
-                return None            
+                return None
         else:
             if col < 0 or col >= len(Track.headers):
                 return None
-        return self.lst[row].bycol(col, edit=edit)        
+        return self.lst[row].bycol(col, edit=edit)
 
     def tip(self, row, col):
         '''
@@ -602,12 +602,12 @@ class TrackModel(object):
             return None
         if self.gtmode:
             if col < 0 or col >= len(GroupTrack.headers):
-                return None            
+                return None
         else:
             if col < 0 or col >= len(Track.headers):
                 return None
-        return self.lst[row].tipbycol(col)        
-    
+        return self.lst[row].tipbycol(col)
+
     def setdata(self, row, col, value):
         '''
         return the lst @ row, col
@@ -618,41 +618,41 @@ class TrackModel(object):
             return False
         if self.gtmode:
             if col < 0 or col >= len(GroupTrack.headers):
-                return False            
+                return False
         else:
             if col < 0 or col >= len(Track.headers):
                 return False
-        
+
         t = self.lst[row]
         self.stats.remove(t)
         ok = t.bycol(col, value)
         self.stats.add(t)
-        
+
         # add to session
         self._checksession()
         self.session.add(t)
         if self.gtmode:
             self.session.add(t.track)
         self.session.commit()
-        
+
         return ok
-        
+
     def headercount(self):
         if self.gtmode:
             if GroupTrack.headers is None:
-                return 0        
-            return len(GroupTrack.headers)              
+                return 0
+            return len(GroupTrack.headers)
 
         if Track.headers is None:
-            return 0        
-        return len(Track.headers)              
-    
+            return 0
+        return len(Track.headers)
+
     def header(self, col):
         if self.gtmode:
             if col < 0 or col >= len(GroupTrack.headers):
                 return None
             return GroupTrack.headers[col]
-            
+
         if col < 0 or col >= len(Track.headers):
             return None
         return Track.headers[col]
@@ -668,64 +668,64 @@ class TrackModel(object):
             return GroupTrack.isCheck(col)
         else:
             return Track.isCheck(col)
-    
+
     def insertrows(self, position, rows):
         """ only used to create new rows (would work properly for "add to group" imo) """
         if self.lst == None:
             self.lst = []
-            
+
         self._checksession()
         if self.gtmode:
             grp = self.session.query(Group).filter(Group.name==self.prevgroup).one()
             self.session.add(grp)
-            for row in range(position, position+rows):            
+            for row in range(position, position+rows):
                 nt = Track("","",True,0)
                 ngt = GroupTrack(int(row) + 1, 0, 0)
                 ngt.track = nt
                 grp.grouptracks.append(ngt)
-                self.lst.insert(row, ngt)            
+                self.lst.insert(row, ngt)
                 self.stats.add(nt)
                 self.session.add(nt)
                 self.session.add(ngt)
         else:
-            for row in range(position, position+rows):            
+            for row in range(position, position+rows):
                 nt = Track("","",True,0)
                 self.stats.add(nt)
-                self.lst.insert(row, nt)            
+                self.lst.insert(row, nt)
                 self.session.add(nt)
         self.session.commit()
-        
+
     def removerowslist(self,rows):
         ''' remove the rows given by the list '''
         if self.lst == None:
             return None
         if rows == None or type(rows) != list or len(rows) == 0:
-            return None        
+            return None
 
         assert() # this method is probably broken
-        
+
         self._checksession()
-        for row in reversed(rows):    
+        for row in reversed(rows):
             dt = self.lst[row]
             if type(dt) is Track:
                 self.stats.remove(dt)
                 print("Deleting", dt.menucaption())
             else:
                 self.stats.remove(dt, t=False)
-            self.session.delete(dt)        
+            self.session.delete(dt)
             del(self.lst[row])
-        self.session.commit()            
-        
+        self.session.commit()
+
     def removerows(self, position, rows, trackstoo):
         '''
         remove rows given by starting position and number of rows
         '''
         if self.lst == None:
             return None
-                
+
         self._checksession()
         for row in range(position+rows-1, position-1, -1):
-            dt = self.lst[row]            
+            dt = self.lst[row]
             t = True # track will be deleted (not "unlinked")
             if type(dt) is Track:
                 print("Deleting", dt.menucaption())
@@ -736,8 +736,8 @@ class TrackModel(object):
                 else:
                     t = False
             self.stats.remove(dt, t=t)
-            self.session.delete(dt)        
-            del(self.lst[row]) 
+            self.session.delete(dt)
+            del(self.lst[row])
         self.session.commit()
 
     def rating(self, rows, rr):
@@ -749,7 +749,7 @@ class TrackModel(object):
             if self.gtmode:
                 tt = tt.track
             self.stats.remove(tt)
-            tt.rating = rr 
+            tt.rating = rr
             self.stats.add(tt)
             self.session.add(tt)
         self.session.commit()
@@ -767,31 +767,31 @@ class TrackModel(object):
             self.stats.add(tt)
             self.session.add(tt)
         self.session.commit()
-        
+
     def mergerows(self, torow, row):
         '''
         merge two tracks into one
-        
+
         the track given by row will be deleted, all links to it will be redirected to torow track
-        returns the new index of the merged row (which might have changed) 
+        returns the new index of the merged row (which might have changed)
         '''
         if self.lst == None:
             return -1
-        
+
         #if self.gtmode:
         #    return -1
-        
+
         self._checksession()
-        
+
         tdel = self.lst[row]
         tt = tgt = self.lst[torow]
         if self.gtmode:
             gc = tdel.group
             tt = tt.track
             tdel = tdel.track
-        
+
         # relink grouptracks to the merged track
-        # it cant be done directly, because any change to gtdel will also change tdel.grouptracks 
+        # it cant be done directly, because any change to gtdel will also change tdel.grouptracks
         lgt = []
         for gtdel in tdel.grouptracks:
             lgt.append(gtdel)
@@ -804,7 +804,7 @@ class TrackModel(object):
             if statrefr:
                 self.stats.add(gtdel)
             self.session.add(gtdel)
-        
+
         self.session.delete(tdel)
         if not self.gtmode:
             self.stats.remove(self.lst[row])
@@ -812,14 +812,14 @@ class TrackModel(object):
         else:
             self.stats.total -= 1 # totals have changed, list and group are already updated
         self.session.commit()
-        
+
         return self.lst.index(tgt)
-    
+
     def addtogroup(self, rows, gid, force=False):
         '''
         add tracks given by indices in rows to a group given by gid
-        
-        do not add the track if the group already contains it        
+
+        do not add the track if the group already contains it
         '''
         gg = self.session.query(Group).filter(Group.idno == gid).one()
         tids = {}
@@ -829,7 +829,7 @@ class TrackModel(object):
                 lastno = gt.no
             tids[gt.track.idno] = None
         lastno += 1
-        
+
         self._checksession()
 
         addstat = False
@@ -839,7 +839,7 @@ class TrackModel(object):
         # duplicities (and their captions) - tracks that are already in the group
         d = []
         dc = ""
-        
+
         for rr in rows:
             tt = self.lst[rr]
             if self.gtmode:
@@ -855,7 +855,7 @@ class TrackModel(object):
                 self.stats.add(tt,t=False)
             self.session.add(gt)
             lastno += 1
-            
+
         self.session.commit()
 
         dc = dc.strip()

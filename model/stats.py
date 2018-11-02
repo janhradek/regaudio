@@ -54,7 +54,7 @@ class Stats(object):
             self.pagenew += amount
         self.rr[tt.rating] += amount
 
-        if f: 
+        if f:
             self.fltr += amount
             if tt.new:
                 self.fltrnew += amount
@@ -63,7 +63,7 @@ class Stats(object):
 
     def remove(self, tt, f=True, t=True):
         """remove track/grouptrack to counters
-        
+
         g(roup) and t(otal) means change the respective counters too (on by default)"""
         return self.add(tt, f, t, amount=-1)
 
@@ -83,7 +83,7 @@ class Stats(object):
         rr = [zz(r) for r in self.rr]
 
         self.statstr = "Page:{}  /  Filter:{}  /  All:{}  Ratings:[{}|{},{},{},{},{}|{},{},{},{},{}]  Average:{:.3}".format(
-                ll(self.page, self.pagenew), ll(self.fltr, self.fltrnew), self.total, 
+                ll(self.page, self.pagenew), ll(self.fltr, self.fltrnew), self.total,
                 rr[0],rr[1],rr[2],rr[3],rr[4],rr[5],rr[6],rr[7],rr[8],rr[9],rr[10],float(avg))
 
         return self.statstr

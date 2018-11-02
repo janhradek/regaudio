@@ -8,7 +8,7 @@ CFGLOC = os.path.expanduser(CFGLOC)
 CFG = configparser.ConfigParser()
 CFG["regaudio"] = {
     # the location of the database
-    "db" : "~/regaudio.sqlite", 
+    "db" : "~/regaudio.sqlite",
     # utils/utils.py, filenametoinfo - works by dashes, this "list" contains exceptions
     "import filename exceptions" : "",
     # stuff to remove (replace by a space) from names in function saniziteArtistName

@@ -9,10 +9,10 @@ Created on May 7, 2012
 
 def re_range(lst):
     '''
-    turns a sorted list into a list of tuples - start, end, step     
+    turns a sorted list into a list of tuples - start, end, step
     '''
     from numpy import diff
-        
+
     #lst = [ 1, 3, 5, 7, 8, 9, 10, 11, 13, 15, 17 ]
     onediff, twodiff = diff(lst), diff(diff(lst))
     increments, breakingindices = [], []
@@ -20,7 +20,7 @@ def re_range(lst):
         if twodiff[i] != 0:
             breakingindices.append(i+2) # Correct index because of the two diffs
             increments.append(onediff[i]) # Record the increment for this section
-    
+
     # Increments and breakingindices should be the same size
     tuples = []
     start = lst[0]
@@ -33,16 +33,16 @@ def re_range(lst):
 def re_rangebyone(lst, count=False):
     '''
     turns a sorted list into a list of tuples - start, end where step is one
-    if count is true return number of values instead of end     
+    if count is true return number of values instead of end
     '''
     from numpy import diff
 
     onediff = diff(lst)
-    breakingindices = []    
+    breakingindices = []
     for i in range(len(onediff)):
         if onediff[i] != 1:
-            breakingindices.append(i+1) # Correct index because of the two diffs            
-    
+            breakingindices.append(i+1) # Correct index because of the two diffs
+
     # Increments and breakingindices should be the same size
     tuples = []
     start = lst[0]
@@ -71,7 +71,7 @@ def filenametoinfo(fn, exceptionscfg=None, stripext=".mp3"):
 
     import glob
     import os.path
-    import re 
+    import re
 
     #global _dd
 
@@ -86,7 +86,7 @@ def filenametoinfo(fn, exceptionscfg=None, stripext=".mp3"):
     # and remove dashes of all such substrings. It may be somewhat dangerous but since
     # this whole thing is a fallback function I hope it will not backfire at me.
     # ... as you can see the list is somewhat long and shouldn't be processed in the way it is below
-    # TODO it would probably be nice not tu run this first and see what we get and then use this only in 
+    # TODO it would probably be nice not tu run this first and see what we get and then use this only in
     # "not very nice" cases
     global FILENAMEEXCEPTIONS
     if not FILENAMEEXCEPTIONS and exceptionscfg:
@@ -115,14 +115,14 @@ def filenametoinfo(fn, exceptionscfg=None, stripext=".mp3"):
 
     # some dark magic (replace all known dash cases with underscores)
     fnl = fn.lower()
-    for sunas in FILENAMEEXCEPTIONS: 
+    for sunas in FILENAMEEXCEPTIONS:
         if sunas in fnl:
             #fn = fn.replace(sunas, sunas.replace("-", "_"))
             fn = re.sub('(?i)' + re.escape(sunas), sunas.replace("-", "_"), fn)
 
     # the best case, everything by the scene rules [trackno]-[name]_-_[track]
     # (sadly this happens only in about 15% of all the cases :/ )
-    # note: (?: means that the group is not part of groups 
+    # note: (?: means that the group is not part of groups
     res = re.match(r"^(.+)_-_(.+?)(?:-([a-z0-9A-Z]+)|)$", fn)
     if res:
         return processgroups(res.groups())

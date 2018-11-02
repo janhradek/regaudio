@@ -103,8 +103,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionFilterReset.triggered.connect(self.filterSetTo)
         self.menuFilterHistory.aboutToShow.connect(self.filterHistoryUpdateMenu)
         self.filterreset.clicked.connect(self.actionFilterReset.activate)
-        self.filterrecall.setMenu(self.menuFilterHistory)        
-        self.filterrecall.clicked.connect(self.filterrecall.showMenu)                
+        self.filterrecall.setMenu(self.menuFilterHistory)
+        self.filterrecall.clicked.connect(self.filterrecall.showMenu)
 
         #connect actions
         self.actionTrackDelete.triggered.connect(self.trackDelete)
@@ -345,7 +345,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         for tid,cap in self.tracks.dbmodel.similar(rows[0]):
             receiver = lambda tid=tid:self.trackRelink(tid)
             self.menuTrackRelink.addAction(cap, receiver)
-        
+
     def updateMenuGroup(self):
         pass
 
@@ -684,13 +684,13 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 self.filterhistory.append(rule)
                 if not self.filterrecall.isEnabled():
                     self.filterrecall.setEnabled(True)
-           
+
             grp = group.Group.namefromcaption(self.groupbox.currentText())
             maxrows = int(self.pagemaxtracksline.text())
             page = int(self.pagepageline.text())
 
             self.tracks.setfilter(rule=rule, group=grp, maxrows=maxrows, page=page)
-            
+
             if self.tracks.rowCount():
                 pass # TODO maybe remember the rule if the search yielded any results
         finally:

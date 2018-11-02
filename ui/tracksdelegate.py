@@ -91,7 +91,7 @@ class StarPainter(object):
                 painter.drawPolyline(self.starPolygon)
             elif i < self._starCount:
                 painter.drawPolygon(self.starPolygon, QtCore.Qt.WindingFill)
-            else: #elif editMode == StarPainter.Editable: 
+            else: #elif editMode == StarPainter.Editable:
                 painter.drawPolyline(self.starPolygon)
 
             painter.translate(1.0, 0.0)
@@ -108,7 +108,7 @@ class CheckPainter(object):
         for i in range(5):
             ang = (0.4 * i + 1.5) * math.pi
             self.starlines.append(QtCore.QLineF(0.5 + 0.2 * math.cos(ang), 0.5 + 0.2 * math.sin(ang),
-                0.5 + 0.3 * math.cos(ang), 0.5 + 0.3 * math.sin(ang))) 
+                0.5 + 0.3 * math.cos(ang), 0.5 + 0.3 * math.sin(ang)))
 
     def getState(self):
         return self.state
@@ -144,7 +144,7 @@ class CheckPainter(object):
         painter.scale(self.PaintingScaleFactor, self.PaintingScaleFactor)
 
         painter.drawEllipse(self.circlerect)
-        
+
         if self.state:
             pen.setWidthF(0.2)
             painter.setPen(pen)
@@ -193,7 +193,7 @@ class StarEditor(QtGui.QWidget):
         halfstarwidth = self._starPainter.sizeHint().width() // (2*self._starPainter.maxStarCount())
         halfstar = int(x + halfstarwidth / 2) // halfstarwidth
         if 0 <= halfstar <= 2*self._starPainter.maxStarCount():
-            return halfstar 
+            return halfstar
 
         return -1
 
@@ -202,7 +202,7 @@ class TracksDelegate(QtGui.QStyledItemDelegate):
     """
     allows to paint stars instead of rating (0-10) and a nice graphic instead of True/False
 
-    constructor requires an object that implements isStar(index) 
+    constructor requires an object that implements isStar(index)
     and isCheck(index) methods to distinguish when to paint those
 
     """
@@ -278,7 +278,7 @@ class TracksDelegate(QtGui.QStyledItemDelegate):
         if self.ps.isCheck(index):
             if not index.flags() & QtCore.Qt.ItemIsEditable:
                 return False
-    
+
             # Do not change the checkbox-state
             if event.type() == QtCore.QEvent.MouseButtonRelease or event.type() == QtCore.QEvent.MouseButtonDblClick:
                 if event.button() != QtCore.Qt.LeftButton:# or not self.getCheckBoxRect(option).contains(event.pos()):
@@ -290,13 +290,13 @@ class TracksDelegate(QtGui.QStyledItemDelegate):
                     return False
             else:
                 return False
-    
+
             # Change the checkbox-state
             self.setModelData(None, model, index)
             return True
         else:
             return super().editorEvent(event, model, option, index)
-    
+
     def commitAndCloseEditor(self):
         editor = self.sender()
         self.commitData.emit(editor)

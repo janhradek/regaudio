@@ -7,22 +7,22 @@ def timetostr(mm, ss, ms, edit=False):
         return "{0:02d}:{1:02d}:{2:02d}".format(mm,ss,ms)
     else: # view only
         return "{0:02d}:{1:02d}".format(mm, ss if ms < 500 else ss + 1)
-    
+
 def strtototal(timestr):
     mm,ss,ms,ok = strtotime(timestr)
     if not ok:
         return 0, False
     else:
         return timetototal(mm,ss,ms), True
-    
+
 def strtotime(timestr):
     """
     two valid inputs MM:SS:MS and MM:SS
-    return mm,ss,ms,ok    
+    return mm,ss,ms,ok
     """
     fail = (0,0,0,False)
     spl = timestr.split(":")
-    
+
     if len(spl) < 2 or len(spl) > 3:
         return fail
     try:
@@ -31,7 +31,7 @@ def strtotime(timestr):
         ms = int(spl[2]) if len(spl) == 3 else 0
         return mm,ss,ms,True
     except:
-        return fail    
+        return fail
 
 def totaltotime(total):
     """ ii is the total miliseconds """
@@ -41,6 +41,6 @@ def totaltotime(total):
     mm = total // 60
     return (mm,ss,ms)
 
-def timetototal(mm, ss, ms):                          
-    return (mm * 60 + ss) * 1000 + ms    
-        
+def timetototal(mm, ss, ms):
+    return (mm * 60 + ss) * 1000 + ms
+

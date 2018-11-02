@@ -40,11 +40,11 @@ Features
     - implement for import too
 - import directory (group)
 - stars for rating (it should support tracks in groups too)
-- star for new (star vs circle?, there must be visible difference with rating)    
+- star for new (star vs circle?, there must be visible difference with rating)
 - add new tracks to group
 - delete tracks from group (not just grouptracks)
 - ikona
-- configuration file ~/.regaudio : currently only one configuration value: location of the db 
+- configuration file ~/.regaudio : currently only one configuration value: location of the db
 - total number of pages
 - import window - disable enter and esc to close the window
 - automatically change groupname of import or provide an option to do so
@@ -65,7 +65,7 @@ v0.1.2:
 + import: tracks column now displays best match indicators
 + track rating in tooltip is now displayed as a set of stars, plus and dashes
 + track and import tables now both have smaller row height and alternating row colors
-+ import: it is now possible to directly select multiple cuesheets 
++ import: it is now possible to directly select multiple cuesheets
 + import: select best ('B' key)
 + import: quick resolve (select best track for **, ++, create new for no match, the rest is left as is)
 - tables: columns are now resized properly tanks to wordWrap=False

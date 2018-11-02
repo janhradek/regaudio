@@ -1,26 +1,26 @@
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
-class TracksModel(QtCore.QAbstractTableModel):    
+class TracksModel(QtCore.QAbstractTableModel):
     '''
-    An editable ui table model for tracks    
-    '''    
-        
+    An editable ui table model for tracks
+    '''
+
     # a feedback signal for the window - if new filter rules means that inputs should change
     # this feedback will be used to notify the mainwindow
     feedback = QtCore.pyqtSignal(str, str)
-        
+
     def __init__(self, dbmodel, parent=None):
         super().__init__(parent)
         self.dbmodel = dbmodel
         self.sortingreallyenabled = True
-    
+
     def rowCount(self, parent=None):
         return self.dbmodel.datacount()
-        
+
     def columnCount(self, parent=None):
         return self.dbmodel.headercount()
-        
+
     def headerData(self, section, orientation=QtCore.Qt.Horizontal, role=QtCore.Qt.DisplayRole):
         if role != QtCore.Qt.DisplayRole:
             return None
@@ -28,22 +28,22 @@ class TracksModel(QtCore.QAbstractTableModel):
             return self.dbmodel.header(section)
         else:
             return section
-        
+
     def flags(self, index):
         if not index.isValid():
             return QtCore.Qt.ItemIsEnabled
         return super().flags(index) | QtCore.Qt.ItemIsEditable
-    
+
     def data(self, index, role=QtCore.Qt.DisplayRole):
         if not index.isValid():
             return None
-        if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole: 
+        if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:
             return self.dbmodel.data(index.row(),index.column(), edit= (role == QtCore.Qt.EditRole))
-        elif role == QtCore.Qt.ToolTipRole: 
-            return self.dbmodel.tip(index.row(),index.column())           
+        elif role == QtCore.Qt.ToolTipRole:
+            return self.dbmodel.tip(index.row(),index.column())
         else:
-            return None    
-            
+            return None
+
     def setData(self, index, value, role=QtCore.Qt.DisplayRole):
         if index.isValid() and role == QtCore.Qt.EditRole:
             ok = self.dbmodel.setdata(index.row(),index.column(),value)
@@ -54,7 +54,7 @@ class TracksModel(QtCore.QAbstractTableModel):
             self.emitfeedback(fb)
             return True
         return False
-    
+
     def insertRows(self, position, rows, index=None):
         if index == None:
             index = QtCore.QModelIndex()
@@ -64,7 +64,7 @@ class TracksModel(QtCore.QAbstractTableModel):
         fb=[("statusupdate","")]
         self.emitfeedback(fb)
         return True
-    
+
     def removeRowsList(self, rows):
         '''
         WARNING: this doesn't work as expected, because visually all the rows in the list range are
@@ -98,7 +98,7 @@ class TracksModel(QtCore.QAbstractTableModel):
         #self.beginResetModel()
         self.dbmodel.rating(rows, rr)
         self.layoutChanged.emit()
-        #self.endResetModel()        
+        #self.endResetModel()
         fb=[("statusupdate","")]
         self.emitfeedback(fb)
 
@@ -108,15 +108,15 @@ class TracksModel(QtCore.QAbstractTableModel):
         #self.beginResetModel()
         self.dbmodel.toggleNew(rows)
         self.layoutChanged.emit()
-        #self.endResetModel()        
+        #self.endResetModel()
         fb=[("statusupdate","")]
         self.emitfeedback(fb)
-    
+
     def mergetracks(self, rows, torow):
         '''
         merge all the tracks given by rows into one track given by row
         '''
-        # process the list from the end to keep the row numbers consistent 
+        # process the list from the end to keep the row numbers consistent
         for row in reversed(rows):
             if torow == row:
                 continue
@@ -128,8 +128,8 @@ class TracksModel(QtCore.QAbstractTableModel):
                 self.endRemoveRows()
         fb=[("statusupdate","")]
         self.emitfeedback(fb)
-        return True        
-    
+        return True
+
     def sort(self, col, order=QtCore.Qt.AscendingOrder):
         '''
         change sorting (keep the rest of the filter)
@@ -138,22 +138,22 @@ class TracksModel(QtCore.QAbstractTableModel):
             return
         self.beginResetModel()
         fb = self.dbmodel.setfilter(rule=None, group=None, orderby=col, orderbyasc=(order==QtCore.Qt.AscendingOrder))[1]
-        self.endResetModel()        
+        self.endResetModel()
         fb.append(("resize",""))
         fb.append(("statusupdate",""))
         self.emitfeedback(fb)
-    
+
     def setfilter(self, rule, group="", maxrows=0, page=1):
         '''
         change filter (keep or reset the sort)
         '''
         self.beginResetModel()
         fb = self.dbmodel.setfilter(rule=rule, group=group, maxrows=maxrows, page=page)[1]
-        self.endResetModel()        
+        self.endResetModel()
         fb.append(("resize",""))
         fb.append(("statusupdate",""))
         fb.append(("pagesset",""))
-        self.emitfeedback(fb)       
+        self.emitfeedback(fb)
 
     def detachedcopy(self, row):
         self.dbmodel.detachedcopy(row)
@@ -166,11 +166,11 @@ class TracksModel(QtCore.QAbstractTableModel):
         self.endResetModel()
         fb = [("statusupdate","")]
         self.emitfeedback(fb)
-                    
+
     def getSelection(self, selected):
         '''
         return the selected indexes (if valid)
-        
+
         selected is a list of indexes
         '''
         rows = []
@@ -189,7 +189,7 @@ class TracksModel(QtCore.QAbstractTableModel):
         sends feedback data (ui changes) to main window through connected signal
         '''
         for m, v in fb:
-            self.feedback.emit(m, str(v))        
+            self.feedback.emit(m, str(v))
 
     def isStar(self, index):
         return self.dbmodel.isStar(index.column())

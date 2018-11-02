@@ -12,11 +12,11 @@ from var.utils import filenametoinfo
 from model.config import CFG, cfgvaltolistlist
 
 class ImportEntry(object):
-    
+
     MAXCANDIDATES = 25
 
     headers = ["Search key", "Found", "Selected", "No", "Artist", "Name", "New", "Rating", "From", "Length"]
-    
+
     def __init__(self):
         self.originalkey = ""
         self.searchkey = ""
@@ -33,7 +33,7 @@ class ImportEntry(object):
         self.rating = 0
         self.fromms = 0
         self.lengthms = 0
-        
+
     def bycol(self, col, newvalue=None, edit=False):
         # self.searchkey
         if col == 0:
@@ -59,8 +59,8 @@ class ImportEntry(object):
                 return "***" # this indicates a new track
             elif self.track != None:
                 return "sel"
-            return ""   
-        # no         
+            return ""
+        # no
         elif col == 3:
             if newvalue != None:
                 self.no = newvalue
@@ -76,34 +76,34 @@ class ImportEntry(object):
         elif col == 5:
             if newvalue != None:
                 self.name = newvalue
-                return True 
+                return True
             return self.name
         # new
         elif col == 6:
             if newvalue != None:
                 self.new = newvalue
-                return True 
+                return True
             return self.new
         # rating
         elif col == 7:
             if newvalue != None:
                 self.rating = newvalue
-                return True 
+                return True
             return self.rating
-        # froms        
+        # froms
         elif col == 8:
             if newvalue != None:
                 nw, ok = model.tracktime.strtototal(newvalue)
                 if ok: self.fromms = nw
-                return ok                            
+                return ok
             return model.tracktime.totaltostr(self.fromms, edit)
         # lengthms
         elif col == 9:
-            if newvalue != None:                
+            if newvalue != None:
                 nw, ok = model.tracktime.strtototal(newvalue)
                 if ok: self.lengthms = nw
-                return ok       
-            return model.tracktime.totaltostr(self.lengthms, edit)            
+                return ok
+            return model.tracktime.totaltostr(self.lengthms, edit)
 
     def tipbycol(self, col):
         if col == 0: # "Search key"
@@ -115,7 +115,7 @@ class ImportEntry(object):
             return res
         elif col == 1: #  "Found"
             return "\n".join(tt.menucaption(self) for tt in self.tracks).strip()
-        elif col == 2: # "Selected", 
+        elif col == 2: # "Selected",
             return "New" if self.track == True else "Selected" if self.track != None else None
         elif col == 3: # "No"
             if self.no != self.nobackup:
@@ -124,7 +124,7 @@ class ImportEntry(object):
             res = ""
             if self.artistbackup.strip() != self.artist.strip():
                 res = self.artistbackup + "\n"
-            if (self.track != None and self.track != True 
+            if (self.track != None and self.track != True
                 and self.track.artist.strip().lower() != self.artist.strip().lower()):
                 res += "(" + self.track.artist + ")"
             return res.strip()
@@ -132,7 +132,7 @@ class ImportEntry(object):
             res = ""
             if self.namebackup.strip() != self.name.strip():
                 res = self.namebackup + "\n"
-            if (self.track != None and self.track != True 
+            if (self.track != None and self.track != True
                     and self.track.name.strip().lower() != self.name.strip().lower()):
                 res += "(" + self.track.name + ")"
             return res.strip()
@@ -152,20 +152,20 @@ class ImportEntry(object):
             pass
         return None
 
-    @staticmethod    
+    @staticmethod
     def isStar(col):
         return (col == 7)
 
-    @staticmethod    
+    @staticmethod
     def isCheck(col):
         return (col == 6)
-    
+
     def createTrack(self):
         return Track(self.artist, self.name, self.new, self.rating)
-    
+
     def createGroupTrack(self):
         return GroupTrack(self.no, self.fromms, self.lengthms)
-            
+
     def applyToTrack(self):
         if not type(self.track) is Track:
             return
@@ -181,10 +181,10 @@ class ImportEntry(object):
         '''
         # the searchkey is always in the form !a:something !n:something
         artist = name = "" # values to be set to entry
-        last = "" # what was last        
+        last = "" # what was last
         data = ""
         #ee = self.lst[row] # the ImportEntry
-        for ss in self.searchkey.split("!"):            
+        for ss in self.searchkey.split("!"):
             ss = ss.strip()
             if ss.startswith("a:"):
                 last = "a"
@@ -194,13 +194,13 @@ class ImportEntry(object):
                 data = ss[2:]
             else:
                 data = "!" + ss
-            
+
             if last == "a":
                 artist += data
             elif last == "n":
                 name += data
             # other values are ignored
-        
+
         if artist != "" and name != "" and not dry:
             self.artist = artist
             self.name = name
@@ -209,7 +209,7 @@ class ImportEntry(object):
     def applysearchkey(self, model):
         sk = self.searchkey.lower()
         self.tracks = model.tracks.filter(sk, self.__class__.MAXCANDIDATES )
-        self.track = None                
+        self.track = None
         self.best = ["", None]
 
         # determine best matching track (if any)
@@ -232,30 +232,30 @@ class ImportEntry(object):
             self.artist = track.artist
             self.name = track.name
             self.rating = track.rating
-            self.new = track.new        
+            self.new = track.new
 
     @staticmethod
     def coltype(col):
         '''
         returns something if other values depends on it - a tuple of string and list
-        
+
         return what changed and what will depend (index) on it, to pass it to the qt
         '''
         if col == 0:
             return "sk", [1, 2]
         return "", None
-        
-    @staticmethod    
+
+    @staticmethod
     def editable(col):
         if col == 1 or col == 2:
             return False
-        return True                
+        return True
 
 class ImportData(object):
 
     nameremove = cfgvaltolistlist(CFG["regaudio"]["import name remove"], extend=True)
-    
-    def __init__(self, model, name=""):        
+
+    def __init__(self, model, name=""):
         self.model = model
         self.lst = None
         if type(name) is list:
@@ -264,17 +264,17 @@ class ImportData(object):
         self.fav = True
 
         # just make sure the following function is properly initialized first
-        # TODO it would be better to create a class or singleton 
+        # TODO it would be better to create a class or singleton
         filenametoinfo("", CFG["regaudio"]["import filename exceptions"])
-        
+
     def rowCount(self):
-        return len(self.lst)  
+        return len(self.lst)
 
     def headerCount(self):
         return len(ImportEntry.headers)
 
     def header(self, col):
-        return ImportEntry.headers[col]        
+        return ImportEntry.headers[col]
 
     def isStar(self, col):
         return ImportEntry.isStar(col)
@@ -285,7 +285,7 @@ class ImportData(object):
     def readdatapre(self, what, file):
         """
         reading data pre check
- 
+
         returns tuple (what suggestion, question to ask)
         returns None, None if everything seems to be ok
         """
@@ -293,7 +293,7 @@ class ImportData(object):
             return "cue", \
                 "It seems that the directory has .cue files. Do you wish to import these instead?"
         return None, None
-        
+
     def readdata(self, what, filenames):
         if what == "mm":
             p = xml.sax.make_parser()
@@ -309,22 +309,22 @@ class ImportData(object):
             dr = DirReader(filenames)
             self.lst = dr.makelist()
         for ee in self.lst:
-            ee.originalkey = ee.searchkey 
+            ee.originalkey = ee.searchkey
             ee.unwindsearchkey()
-            ee.artistbackup = ee.artist 
-            ee.namebackup = ee.name 
-            ee.nobackup = ee.no 
+            ee.artistbackup = ee.artist
+            ee.namebackup = ee.name
+            ee.nobackup = ee.no
             ee.applysearchkey(self.model)
 
     def insertrows(self, position, rows):
         if self.lst == None:
             self.lst = []
-            
-        for row in range(position, position+rows):            
+
+        for row in range(position, position+rows):
             ne = ImportEntry()
-            self.lst.insert(row, ne)            
-        
-    def removerows(self, position, rows):            
+            self.lst.insert(row, ne)
+
+    def removerows(self, position, rows):
         '''
         remove rows given by starting position and number of rows
         '''
@@ -332,7 +332,7 @@ class ImportData(object):
             return None
 
         for row in range(position+rows-1, position-1, -1):
-            del(self.lst[row])                             
+            del(self.lst[row])
 
     def getcleanname(self, cutleft='/', removechars='-_.'):
         """cleanup the name by either cuting the prefix given by the last char and/or removing some chars"""
@@ -350,23 +350,23 @@ class ImportData(object):
         if not name:
             name = self.name
         return self.model.getGroups().groupexists(name)
-        
+
     def store(self, stats):
         '''
         store every item in the list according to the data in it
         this might create a group, grouptracks and tracks
-        '''        
+        '''
         ss = self.model.getSession()
-        
+
         gg = None
         if not self.name is None and self.name.strip() != "":
             gg = Group(self.name)
             gg.fav = self.fav
-            ss.add(gg)            
+            ss.add(gg)
             ss.merge(gg) # merge the idno
-            
+
         for ee in self.lst:
-            tt = None            
+            tt = None
             if ee.track == True:
                 tt = ee.createTrack()
                 ss.add(tt)
@@ -375,43 +375,43 @@ class ImportData(object):
             elif ee.track != None:
                 ee.applyToTrack()
                 tt = ee.track
-                
+
             if tt != None and gg != None:
                 gt = ee.createGroupTrack()
                 ss.add(gt)
-                gt.track = tt                
+                gt.track = tt
                 gg.grouptracks.append(gt)
-                
+
         ss.commit()
 
         if gg:
             return gg.idno
         return None
-        
+
     def editable(self, col):
         return ImportEntry.editable(col)
-    
+
     def data(self, row, column, edit=False):
         return self.lst[row].bycol(column, edit=edit)
 
     def tip(self, row, col):
         return self.lst[row].tipbycol(col)
-    
+
     def setdata(self, row, column, value):
         '''
         return a list of columns to update
-        '''        
+        '''
         ee = self.lst[row]
         ok = ee.bycol(column, value)
-        
-        # sk -> fetch tracks, clear picked, 
+
+        # sk -> fetch tracks, clear picked,
         ct, cols = ImportEntry.coltype(column)
         if ct == "sk":
             ee.applysearchkey(self.model)
-            
-        return cols, ok    
-    
-    def reset(self, row):              
+
+        return cols, ok
+
+    def reset(self, row):
         ee = self.lst[row]
         ee.searchkey = ee.originalkey
         ee.no = ee.nobackup
@@ -423,8 +423,8 @@ class ImportData(object):
         # currently only name is being sanitized
         # removed items will be replaced with a space
         for rr in self.__class__.nameremove:
-            rr = rr.lower() 
-            if rr == rr.upper(): 
+            rr = rr.lower()
+            if rr == rr.upper():
                 # simple replacement is sufficient
                 ee.name = ee.name.replace(rr, " ")
                 continue
@@ -435,13 +435,13 @@ class ImportData(object):
                 if ii == -1:
                     break
                 ee.name = " ".join((ee.name[:ii].strip(), ee.name[ii+len(rr):].strip()))
-        
+
     def searchToArtistName(self, row):
         self.lst[row].unwindsearchkey()
-        
+
     def artistNameToSearch(self, row):
         ee = self.lst[row]
-        ee.searchkey = "!a:" + ee.artist + " !n:" + ee.name        
+        ee.searchkey = "!a:" + ee.artist + " !n:" + ee.name
         ee.applysearchkey(self.model)
 
     def artistToSearch(self, row):
@@ -451,7 +451,7 @@ class ImportData(object):
 
     def nameToSearch(self, row):
         ee = self.lst[row]
-        ee.searchkey = "!n:" + ee.name        
+        ee.searchkey = "!n:" + ee.name
         ee.applysearchkey(self.model)
 
     def nameCutToSearch(self, row):
@@ -461,7 +461,7 @@ class ImportData(object):
         nn, sep, tail = nn.partition("(")
         ee.searchkey = "!n:" + nn.strip()
         ee.applysearchkey(self.model)
-        
+
     def rating(self, row, rr):
         ee = self.lst[row]
         ee.rating = rr
@@ -488,14 +488,14 @@ class ImportData(object):
                 if int(ie.no) - 1 != pp:
                     cd = cd + 1
                 ie.no = (cd * 100) + int(ie.no)
-    
+
     def mmTranslateSearchKey(self):
         '''
         turn the serchkeys in plaintext to advanced filters, (from Freemind mindmaps)
-        '''       
+        '''
         for ie in self.lst:
             sk = ie.searchkey
-            try:                
+            try:
                 ska, skn = sk.split("-")
                 sk = "!a:{} !n:{}".format(ska.strip(), skn.strip())
             except ValueError as e:
@@ -507,16 +507,16 @@ class ImportData(object):
 
     def setFav(self, fav):
         self.fav = fav
-    
-    def getStatus(self):        
+
+    def getStatus(self):
         """ total, new, selected, left = self.importdata.getStatistics() """
-        total = new = selected = left = 0        
+        total = new = selected = left = 0
         warnnum = False
         warngroup = False
         dno = {}
         if not self.lst is None:
             for ie in self.lst:
-                total += 1                
+                total += 1
                 if ie.track == None:
                     left += 1
                 elif ie.track == True:
@@ -531,29 +531,29 @@ class ImportData(object):
         if "/" in self.name or len(self.name) > 100:
             warngroup = True
 
-        return (total, new, selected, left, warnnum, warngroup)            
+        return (total, new, selected, left, warnnum, warngroup)
 
 class MMHandler(xml.sax.handler.ContentHandler):
     def __init__(self):
         self.lst = []
         self.entry = None
-        
+
     def startElement(self, name, attrs):
         if name == "node":
             self.entry = ImportEntry()
             self.entry.rating = 5 #1
-            self.entry.new = True #False 
-            if "TEXT" in attrs:            
+            self.entry.new = True #False
+            if "TEXT" in attrs:
                 self.entry.searchkey = attrs["TEXT"]
             if "COLOR" in attrs:
                 if attrs["COLOR"] == "#996600":
                     self.entry.rating = 2
                     #self.entry.new = True
             self.lst.append(self.entry)
-            
+
         if name == "richcontent":
             print("MMImport: Richcontent not supported")
-        
+
         if name == "icon":
             icn = attrs["BUILTIN"]
             if icn == "button_ok":
@@ -570,22 +570,22 @@ class MMHandler(xml.sax.handler.ContentHandler):
                 self.entry.rating += 0 #1
             else:
                 print("MMImport: Unknown icon: {}".format(icn))
-                
+
         if name == "font":
             if "BOLD" in attrs:
                 self.entry.rating += 1 #2
-    
+
     def characters(self, content):
         if content.strip() != "":
             print("MMImport: raw data: {}".format(content))
-        
+
     def endElement(self, name):
         if name == "node" and  self.entry != None and self.entry.rating > 10:
-            self.entry.rating = 10                            
+            self.entry.rating = 10
 
 
 class CueReader(object):
-    
+
     def __init__(self, fnames):
         self.fnames = fnames
         if not type(self.fnames) is list:
@@ -597,8 +597,8 @@ class CueReader(object):
         self.title = ""
         self.performer = ""
         self.file = ""
-        self.read()        
-        
+        self.read()
+
     def read(self):
         for fn in self.fnames:
             ff = None
@@ -621,8 +621,8 @@ class CueReader(object):
                 if title:
                     self.title = title
             except IOError as ee:
-                raise ee 
-                #pass #?                                    
+                raise ee
+                #pass #?
             finally:
                 if ff != None:
                     ff.close()
@@ -634,15 +634,15 @@ class CueReader(object):
         perf = None
         title = None
 
-        prev = None # previous track            
-        cur = None # current track            
+        prev = None # previous track
+        cur = None # current track
         for line in ff:
             line = line.strip()
             if line.startswith("REM"):
                 continue
             if line.startswith("FILE"):
-                #self.file = line[5:]                    
-                fn = line[5:]                    
+                #self.file = line[5:]
+                fn = line[5:]
             elif line.startswith("TRACK") and line.endswith("AUDIO"):
                 prev = cur
                 cur = [int(line[6:-6]), "", "", 0, 0] # no, title, perf, start, length
@@ -666,8 +666,8 @@ class CueReader(object):
                 cur[3] = cls.timeframestotime(line[9:])
                 if prev != None:
                     prev[4] = cur[3] - prev[3]
-        return lst, fn, perf, title 
-                
+        return lst, fn, perf, title
+
     def makelist(self):
         "list of [no, title , perf, start, length] -> list of ImportEntry"
         lst = []
@@ -681,8 +681,8 @@ class CueReader(object):
             ie.originalkey = "!a:{} !n:{}".format(ie.artist, ie.name)
             ie.searchkey = ie.originalkey
             lst.append(ie)
-        return lst                
-                
+        return lst
+
     @staticmethod
     def timeframestotime(timestr):
         """
@@ -692,14 +692,14 @@ class CueReader(object):
         mm = int(mm)
         ss = int(ss)
         ms = int(int(ff) * 1000 / 75)
-                
+
         return (mm*60 + ss)*1000 + ms
-        
+
 
 class DirReader(object):
 
     # place res for parsefn here
-    
+
     def __init__(self, dname, handlecue=None):
         self.dname = dname
         self.lst = [] # not the final list, a list of track, artist, name and album
@@ -712,7 +712,7 @@ class DirReader(object):
         if gcue:
             return True
         return False
-        
+
     def read(self):
         # trust m3u files with the order (and, therefore, track numbers)
         # read id3 tags (missing library)
@@ -732,16 +732,16 @@ class DirReader(object):
         # iglob would not allow the following test if not gmp3
         gmp3 = glob.glob(os.path.join(self.dname, "*.mp3"))
         if not gmp3:
-            return False 
+            return False
         ordered = True # unless stated otherwise
         someordered = False # at least one number somewhere
         from lib.id3reader import Reader
         readervals = ["track", "performer","title"]#, "album"]
         dd = dict() # K: lcase filename V: track info
         for ff in sorted(gmp3):
-            # read id3 
+            # read id3
             id3 = Reader(ff)
-            tt = [ id3.getValue(rv) for rv in readervals ] 
+            tt = [ id3.getValue(rv) for rv in readervals ]
             # check trackno (first index)
             if tt[0] == None or tt[0] == 0 or tt[0].strip() == "" or tt[0] == None:
                 # try parsing the filename
@@ -752,7 +752,7 @@ class DirReader(object):
                 someordered = True
             for e,t in enumerate(tt):
                 if t == None:
-                    tt[e] = ""                
+                    tt[e] = ""
 
             self.lst.append(tt)
             dd[os.path.basename(ff).strip().lower()] = tt
@@ -762,9 +762,9 @@ class DirReader(object):
             files = []
             if gm3u:
                 # use the order in m3u to assign track no
-                if len(gm3u) == 1: 
+                if len(gm3u) == 1:
                     with open(gm3u[0], 'r') as fg: files=fg.readlines()
-                else:          
+                else:
                     readall = False
                     # if the
                     for i, m3u in enumerate(gm3u):
@@ -773,7 +773,7 @@ class DirReader(object):
                     if readall: # readthem all then join them together
                         fll = []
                         for m3u in gm3u:
-                            with open(m3u, 'r') as fg: 
+                            with open(m3u, 'r') as fg:
                                 fl = fg.readlines()
                                 if not fl in fll: # duplicate m3u happens from time to time
                                     fll.append(fl)
@@ -791,7 +791,7 @@ class DirReader(object):
     def readflac(self):
         gflac = glob.glob(os.path.join(self.dname, "*.flac"))
         if not gflac:
-            return False 
+            return False
         for ff in sorted(gflac):
             # no library to read the tags: split by - (track no - artist - name)
             tt = filenametoinfo(ff, stripext=".flac")
@@ -801,7 +801,7 @@ class DirReader(object):
     def readm4a(self):
         gm4a = glob.glob(os.path.join(self.dname, "*.m4a"))
         if not gm4a:
-            return False 
+            return False
         for ff in sorted(gm4a):
             # no library to read the tags: split by - (track no - artist - name)
             tt = filenametoinfo(ff, stripext=".m4a")
@@ -825,7 +825,7 @@ class DirReader(object):
     def makelist(self):
         "list of [no, title , perf, start, length] -> list of ImportEntry"
         lst = []
-        
+
         for ce in self.lst:
             ie = ImportEntry()
             ie.no = int(ce[0])
@@ -836,4 +836,4 @@ class DirReader(object):
             ie.originalkey = "!a:{} !n:{}".format(ie.artist, ie.name)
             ie.searchkey = ie.originalkey
             lst.append(ie)
-        return lst                
+        return lst
