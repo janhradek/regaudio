@@ -125,7 +125,7 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
         self.tableimport.resizeRowsToContents()
 
     def keyPressEvent(self, e):
-        """overrised standart behavior to ignore esc and enter (both would close dialog)"""
+        """overriden standard behavior to ignore esc and enter (both would close dialog)"""
         if e.key() == QtCore.Qt.Key_Escape or e.key() == QtCore.Qt.Key_Enter:
             return
         super().keyPressEvent(e)
