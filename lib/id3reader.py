@@ -1,13 +1,13 @@
 #!/usr/bin/python
 """ Read ID3 tags from a file.
     Ned Batchelder, http://nedbatchelder.com/code/modules/id3reader.html
-
-adopted for python 3
+    ID3 specs: http://www.id3.org/develop.html
 """
 
-__version__ = '1.53.20070415'    # History at the end of the file.
+from __future__ import print_function
 
-# ID3 specs: http://www.id3.org/develop.html
+__version__ = '1.53.20121202'    # History at the end of the file.
+
 
 import struct, sys, zlib
 
@@ -27,12 +27,6 @@ _simpleDataMapping = {
     'comment':      ('COMM', 'COM', 'v1comment'),
 }
 
-# Provide booleans for older Pythons.
-#try:
-#    True, False
-#except NameError:
-#    True, False = 1==1, 1==0
-
 # Tracing
 _t = True
 def _trace(msg):
@@ -50,7 +44,6 @@ def _safestr(s):
         no matter what's in it.
     """
     try:
-        #return str(s).encode(sys.getdefaultencoding())
         return str(s)
     except UnicodeError:
         return '?: '+repr(s)
@@ -140,7 +133,7 @@ class _Frame:
 
         if self.id[0] == 'T':
             # Text fields start with T
-            encoding = self.rawData[0] # was = ord(self.rawData[0])
+            encoding = self.rawData[0]
             if 0 <= encoding < len(_encodings):
                 #if _c: _coverage('encoding%d' % encoding)
                 value = self.rawData[1:].decode(_encodings[encoding])
@@ -155,14 +148,11 @@ class _Frame:
                 value = value.split('\0')
                 #if _c: _coverage('textlist')
             self.value = value
-            #print("TEXT: ", type(self.value), self.value)
         elif self.id[0] == 'W':
             # URL fields start with W
             self.value = str(self.rawData).strip('\0')
-            #if self.id.decode() == 'WXXX':
             if self.id == 'WXXX':
                 self.value = self.value.split('\0')
-            #print("URL: ", type(self.value), self.value)
         elif self.id == 'CDM':
             # ID3v2.2.1 Compressed Data Metaframe
             if self.rawData[0].decode() == 'z':
@@ -171,7 +161,6 @@ class _Frame:
                 #if _c: _coverage('badcdm!')
                 raise Id3Error('Unknown CDM compression: %02x' % self.rawData[0])
             #@TODO: re-interpret the decompressed frame.
-            #print("CDM: ", type(self.value), self.value)
 
         elif self.id in _simpleDataMapping['comment']:
             # comment field
@@ -199,7 +188,6 @@ class _Frame:
                     s = s[:-1]
 
             self.value = s
-            #print("COMMENT: ", type(self.value), self.value)
 
 class Reader:
     """ An ID3 reader.
@@ -217,7 +205,7 @@ class Reader:
 
         bCloseFile = False
         # If self.file is a string of some sort, then open it to get a file.
-        if isinstance(self.file, (type(''), type(''))):
+        if isinstance(self.file, str):
             self.file = open(self.file, 'rb')
             bCloseFile = True
 
@@ -284,8 +272,7 @@ class Reader:
 
     def _addV1Frame(self, id, rawData):
         if id == 'v1genre':
-            #assert len(rawData) == 1
-            #nGenre = ord(rawData)
+            assert len(rawData) == 1
             nGenre = rawData
             try:
                 value = _genres[nGenre]
@@ -311,13 +298,12 @@ class Reader:
         if len(header) < 10:
             return
         hstuff = struct.unpack('!3sBBBBBBB', header)
+
         try:
             decid3 = hstuff[0].decode()
         except UnicodeDecodeError as ee:
-            #print("UnicodeDecodeError: Failed to decode ", hstuff[0])
             decid3 = ""
 
-        #if hstuff[0].decode() != "ID3":
         if decid3 != "ID3":
             # Doesn't look like an ID3v2 tag,
             # Try reading an ID3v1 tag.
@@ -417,7 +403,6 @@ class Reader:
         tag = self.file.read(128)
         if len(tag) != 128:
             return
-        #if str(tag[0:3]) != 'TAG':
         if tag[0:3].decode() != 'TAG':
             return
         self.header = _Header()
@@ -444,12 +429,9 @@ class Reader:
     def _isValidId(self, id):
         """ Determine if the id bytes make a valid ID3 id.
         """
-        for c in id:
-            c = chr(c)
+        for c in map(chr, id):
             if not c in self._validIdChars:
-                #if _c: _coverage('bad id')
                 return False
-        #if _c: _coverage('id '+id.decode())
         return True
 
     def _readFrame_rev2(self):
@@ -579,7 +561,7 @@ class Reader:
         print(self.header)
         print("Frames:")
         for fr in self.allFrames:
-            if type(fr.rawData) == bytes and len(fr.rawData) > 30:
+            if isinstance(fr.rawData, bytes) and len(fr.rawData) > 30:
                 fr.rawData = fr.rawData[:30]
         pprint.pprint(self.allFrames)
         for fr in self.allFrames:
@@ -587,7 +569,7 @@ class Reader:
                 print('%s: %s' % (fr.id, _safestr(fr.value)))
             else:
                 print('%s= %s' % (fr.id, _safestr(fr.rawData)))
-        for label in list(_simpleDataMapping.keys()):
+        for label in _simpleDataMapping:
             v = self.getValue(label)
             if v:
                 print('Label %s: %s' % (label, _safestr(v)))
@@ -644,3 +626,4 @@ if __name__ == '__main__':
 # 20070415: Extended headers in ID3v2.4 weren't skipped properly, throwing
 #               everything out of whack.
 #           Be more generous about finding album and performer names in the tag.
+# 20121202: Jan Hradek - adopted for Python 3, Python 2 support is untested
