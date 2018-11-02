@@ -363,6 +363,7 @@ class ImportData(object):
             gg = Group(self.name)
             gg.fav = self.fav
             ss.add(gg)
+            ss.flush()
             ss.merge(gg) # merge the idno
 
         for ee in self.lst:
@@ -385,6 +386,8 @@ class ImportData(object):
         ss.commit()
 
         if gg:
+            if ((gg.idno is None) or (gg.idno == 0) or (not isinstance(gg.idno, int))):
+                raise Exception("IDNO == None or something else")
             return gg.idno
         return None
 
