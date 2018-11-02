@@ -1,0 +1,3 @@
+# python compiled
+*.py[cod]
+_archive/**
