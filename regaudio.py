@@ -90,12 +90,17 @@ v0.1.3:
 + detachcopy: make a copy of a track in a group (grouptrack) and replace the current link in the group with it
 + relink: change the grouptrack to link to some other similar track
 
+v0.1.4:
+- migration to PyQt5
+
+FIXME:
+- import: import file/directory selection crashes the application
+- import: saying no to name cleanup, cleans up the name anyway
+
 TODO:
 - (artist translator to help fix some issues with names)
 - (import should do some things automaticaly - cleanup group name, cleanup track names)
 - safe delete (introduce a new flag and set it instead of deletion, filter by it)
-
-FIXME:
 '''
 
 import sys
@@ -105,7 +110,7 @@ from PyQt5 import QtWidgets
 from ui import mainWindow
 import model.config # this will read the config
 
-VERSION = 0.1
+VERSION = 0.1.4
 
 def main():
     app = QtWidgets.QApplication(sys.argv)

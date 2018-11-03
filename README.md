@@ -63,10 +63,11 @@ Requirements
 
 * Linux (Unix) (might work on Windows though)
 * Python 3
-* PyQt4
+* PyQt5
 * SQLAlchemy
 * SQLite
 * numpy (for diff)
+* python-sip (for some tweaking some sip setting)
 
 Licence
 -------
