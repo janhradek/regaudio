@@ -100,7 +100,7 @@ FIXME:
 
 import sys
 import os
-from PyQt4 import QtGui
+from PyQt5 import QtWidgets
 
 from ui import mainWindow
 import model.config # this will read the config
@@ -108,7 +108,7 @@ import model.config # this will read the config
 VERSION = 0.1
 
 def main():
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     window=mainWindow.MainWindow()
     window.show()
     sys.exit(app.exec_())

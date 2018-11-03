@@ -10,7 +10,7 @@ sip.setapi('QVariant', 2)
 
 import math
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class StarPainter(object):
@@ -70,8 +70,8 @@ class StarPainter(object):
             painter.setBrush(palette.highlightedText())
             pen.setBrush(palette.highlightedText())
         else:
-            painter.setBrush(palette.foreground())
-            pen.setBrush(palette.foreground())
+            painter.setBrush(palette.windowText())
+            pen.setBrush(palette.windowText())
         pen.setStyle(QtCore.Qt.SolidLine)
         pen.setCapStyle(QtCore.Qt.RoundCap)
         pen.setJoinStyle(QtCore.Qt.RoundJoin)
@@ -131,7 +131,7 @@ class CheckPainter(object):
             pen.setBrush(palette.highlightedText())
         else:
             #painter.setBrush(palette.foreground())
-            pen.setBrush(palette.foreground())
+            pen.setBrush(palette.windowText())
         pen.setStyle(QtCore.Qt.SolidLine)
         pen.setCapStyle(QtCore.Qt.RoundCap)
         pen.setJoinStyle(QtCore.Qt.RoundJoin)
@@ -152,7 +152,7 @@ class CheckPainter(object):
 
         painter.restore()
 
-class StarEditor(QtGui.QWidget):
+class StarEditor(QtWidgets.QWidget):
 
     editingFinished = QtCore.pyqtSignal()
 
@@ -198,7 +198,7 @@ class StarEditor(QtGui.QWidget):
         return -1
 
 
-class TracksDelegate(QtGui.QStyledItemDelegate):
+class TracksDelegate(QtWidgets.QStyledItemDelegate):
     """
     allows to paint stars instead of rating (0-10) and a nice graphic instead of True/False
 
@@ -217,13 +217,13 @@ class TracksDelegate(QtGui.QStyledItemDelegate):
         selected = False
         if self.ps.isStar(index) and dd != None:
             self.sp.setStarCount(dd)
-            if option.state & QtGui.QStyle.State_Selected:
+            if option.state & QtWidgets.QStyle.State_Selected:
                 selected = True
                 painter.fillRect(option.rect, option.palette.highlight())
             self.sp.paint(painter, option.rect, option.palette, selected, StarPainter.ReadOnly)
         elif self.ps.isCheck(index) and dd != None:
             self.cp.setState(dd)
-            if option.state & QtGui.QStyle.State_Selected:
+            if option.state & QtWidgets.QStyle.State_Selected:
                 selected = True
                 painter.fillRect(option.rect, option.palette.highlight())
             self.cp.paint(painter, option.rect, option.palette, selected)
@@ -301,7 +301,7 @@ class TracksDelegate(QtGui.QStyledItemDelegate):
         editor = self.sender()
         self.commitData.emit(editor)
         #self.closeEditor.emit(editor)
-        self.closeEditor.emit(editor, QtGui.QStyledItemDelegate.NoHint)
+        self.closeEditor.emit(editor, QtWidgets.QStyledItemDelegate.NoHint)
 
 
 def populateTableWidget(tableWidget):
@@ -313,13 +313,13 @@ def populateTableWidget(tableWidget):
     )
 
     for row, (title, genre, artist, new, rating) in enumerate(staticData):
-        item0 = QtGui.QTableWidgetItem(title)
-        item1 = QtGui.QTableWidgetItem(genre)
-        item2 = QtGui.QTableWidgetItem(artist)
-        item3 = QtGui.QTableWidgetItem(new)
+        item0 = QtWidgets.QTableWidgetItem(title)
+        item1 = QtWidgets.QTableWidgetItem(genre)
+        item2 = QtWidgets.QTableWidgetItem(artist)
+        item3 = QtWidgets.QTableWidgetItem(new)
         #item3.setData(0, StarPainter(rating))
         item3.setData(0, new)
-        item4 = QtGui.QTableWidgetItem(rating)
+        item4 = QtWidgets.QTableWidgetItem(rating)
         #item3.setData(0, StarPainter(rating))
         item4.setData(0, rating)
         tableWidget.setItem(row, 0, item0)
@@ -343,14 +343,14 @@ if __name__ == '__main__':
 
     import sys
 
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
 
-    tableWidget = QtGui.QTableWidget(4, 5)
+    tableWidget = QtWidgets.QTableWidget(4, 5)
     tableWidget.setItemDelegate(TracksDelegate(PaintSelector()))
     tableWidget.setEditTriggers(
-            QtGui.QAbstractItemView.DoubleClicked |
-            QtGui.QAbstractItemView.SelectedClicked)
-    tableWidget.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+            QtWidgets.QAbstractItemView.DoubleClicked |
+            QtWidgets.QAbstractItemView.SelectedClicked)
+    tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 
     headerLabels = ("Title", "Genre", "Artist", "New", "Rating")
     tableWidget.setHorizontalHeaderLabels(headerLabels)

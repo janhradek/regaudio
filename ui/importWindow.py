@@ -1,12 +1,11 @@
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 from model.importdata import ImportData
 from var import utils
 from ui.importWindowUI import Ui_ImportWindowUI
 from ui.tracksdelegate import TracksDelegate
 
-class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
+class ImportWindow(QtWidgets.QDialog, Ui_ImportWindowUI):
 
     def __init__(self, importdata, parent=None):
         super().__init__(parent)
@@ -22,21 +21,21 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
         self.tableimport.setItemDelegate(TracksDelegate(mdl))
         self.tableimport.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.tableimport.customContextMenuRequested.connect(self.trackContextMenuShow)
-        self.tableimport.setEditTriggers(QtGui.QAbstractItemView.DoubleClicked |
-            QtGui.QAbstractItemView.SelectedClicked |
-            QtGui.QAbstractItemView.EditKeyPressed)
-        self.tableimport.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        self.tableimport.setEditTriggers(QtWidgets.QAbstractItemView.DoubleClicked |
+            QtWidgets.QAbstractItemView.SelectedClicked |
+            QtWidgets.QAbstractItemView.EditKeyPressed)
+        self.tableimport.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 
         # setup group controls
         self.groupnamecheck(self.importdata.name)
         self.groupnameshow()
-        self.groupmenu = QtGui.QMenu()
+        self.groupmenu = QtWidgets.QMenu()
         for act in [
                 ["Cleanup name", self.groupnamecleanup],
                 ["Edit name", self.groupnamechange],
                 ["Restore original name", self.groupnamerestore],
                 ]:
-            action = QtGui.QAction(self)
+            action = QtWidgets.QAction(self)
             action.setText(act[0])
             action.triggered.connect(act[1])
             self.groupmenu.addAction(action)
@@ -53,7 +52,7 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
         self.favcb.toggled.connect(self.statusSetFavGroup)
 
         # tracks table context menu
-        self.contextMenu = QtGui.QMenu()
+        self.contextMenu = QtWidgets.QMenu()
         self.existingmenu = None
         for act in [
                     ["Select existing", None, "existingmenu", self.trackUpdateExistingMenu], # submenu
@@ -93,7 +92,7 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
                 self.contextMenu.addSeparator()
                 continue
             if act[1] == None:
-                setattr(self, act[2], QtGui.QMenu(self.contextMenu))
+                setattr(self, act[2], QtWidgets.QMenu(self.contextMenu))
                 mm = getattr(self, act[2])
                 mm.setTitle(act[0])
                 mm.aboutToShow.connect(act[3])
@@ -103,7 +102,7 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
             alist = None
             tt = None
             if type(act[1]) is list:
-                mm = QtGui.QMenu(self.contextMenu)
+                mm = QtWidgets.QMenu(self.contextMenu)
                 mm.setTitle(act[0])
                 self.contextMenu.addAction(mm.menuAction())
                 alist=act[1]
@@ -113,7 +112,7 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
                 tt=self.contextMenu
 
             for aa in alist:
-                action = QtGui.QAction(self)
+                action = QtWidgets.QAction(self)
                 action.setText(aa[0])
                 action.triggered.connect(aa[1])
                 if len(aa) == 3:
@@ -144,12 +143,12 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
     def groupnamerestore(self):
         """set the groupname to its original"""
         if self.importdata.name == self.importdata.namebackup:
-            QtGui.QMessageBox.warning(self, "Group name restore",
+            QtWidgets.QMessageBox.warning(self, "Group name restore",
                     "The group name was not changed.")
             return
-        ok = QtGui.QMessageBox.question(self, "Group name restore",
+        ok = QtWidgets.QMessageBox.question(self, "Group name restore",
                 "Restore the original name?\n\n" + self.importdata.namebackup,
-                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if not ok:
             return
         self.importdata.name = self.importdata.namebackup
@@ -161,10 +160,10 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
         lst = ["Cut from the left to the last '/' and remove some characters",
                 "Cut from the left to the last '/'",
                 "Remove some characters"]
-        sel, ok = QtGui.QInputDialog.getItem(self, "Group name cleanup",
+        sel, ok = QtWidgets.QInputDialog.getItem(self, "Group name cleanup",
                 "Select cleanup method",
                 lst, current=0, editable=False)
-                #flags=0)#QtGui.QInputDialog.UseListViewForComboBoxItems)
+                #flags=0)#QtWidgets.QInputDialog.UseListViewForComboBoxItems)
         if not ok:
             return
         idx = lst.index(sel)
@@ -174,9 +173,9 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
             newname = self.importdata.getcleanname(removechars=None)
         elif idx == 2:
             newname = self.importdata.getcleanname(cutleft=None)
-        ok = QtGui.QMessageBox.question(self, "Group name cleanup",
+        ok = QtWidgets.QMessageBox.question(self, "Group name cleanup",
                 "Is this new name ok?\n\n" + newname,
-                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if not ok:
             return
         self.groupnamecheck(newname)
@@ -184,7 +183,7 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
         self.statusUpdate()
 
     def groupnamechange(self):
-        newname, ok = QtGui.QInputDialog.getText(self,
+        newname, ok = QtWidgets.QInputDialog.getText(self,
                 "Group name" # quickfix for the narrow input (below)
                 , "New group name: " + " "*100
                 , text=self.importdata.name)
@@ -202,7 +201,7 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
             ok = True
             if not self.importdata.checknamedup(newname):
                 break
-            newname, ok = QtGui.QInputDialog.getText(self, "Group name",
+            newname, ok = QtWidgets.QInputDialog.getText(self, "Group name",
                     "This groupname already exist!\n"
                     "New group name: " + " "*100
                     , text=newname)
@@ -269,7 +268,7 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
             # FIXME - do this nicer
             self.tableimport.model().layoutChanged.emit()
         if warning:
-            QtGui.QMessageBox.warning(self, "Warning", "Some tracks have no best matching track!")
+            QtWidgets.QMessageBox.warning(self, "Warning", "Some tracks have no best matching track!")
 
         self.statusUpdate()
 
@@ -315,7 +314,7 @@ class ImportWindow(QtGui.QDialog, Ui_ImportWindowUI):
             # FIXME - do this nicer
             self.tableimport.model().layoutChanged.emit()
         if warning:
-            QtGui.QMessageBox.warning(self, "Warning", "Some tracks lack artist or name!")
+            QtWidgets.QMessageBox.warning(self, "Warning", "Some tracks lack artist or name!")
 
         self.statusUpdate()
 

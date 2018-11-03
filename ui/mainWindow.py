@@ -1,8 +1,7 @@
 import os.path
 import math
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 from ui.mainWindowUI import Ui_MainWindow
 from ui.groupsmodel import GroupsModel
@@ -22,7 +21,7 @@ This also means that the default location for the database has been chosen - "{1
 To change it, edit the configuration file and restart this application.
 """""
 
-class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
+class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -48,7 +47,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.showDBWarning()
 
         # setup status
-        self.statusline = QtGui.QLabel()
+        self.statusline = QtWidgets.QLabel()
         self.statusBar().addWidget(self.statusline)
 
         # models
@@ -66,13 +65,13 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.trackstable.setItemDelegate(TracksDelegate(self.tracks))
         self.trackstable.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.trackstable.customContextMenuRequested.connect(self.tracksContextMenu)
-        self.trackstable.setEditTriggers(QtGui.QAbstractItemView.DoubleClicked |
-            QtGui.QAbstractItemView.SelectedClicked |
-            QtGui.QAbstractItemView.EditKeyPressed )
-        self.trackstable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        self.trackstable.setEditTriggers(QtWidgets.QAbstractItemView.DoubleClicked |
+            QtWidgets.QAbstractItemView.SelectedClicked |
+            QtWidgets.QAbstractItemView.EditKeyPressed )
+        self.trackstable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 
         # set groups
-        self.filtergroups = QtGui.QSortFilterProxyModel(self)
+        self.filtergroups = QtCore.QSortFilterProxyModel(self)
         self.filtergroups.setSourceModel(self.groups)
         self.filtergroups.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.groupbox.setModel(self.filtergroups)
@@ -143,7 +142,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                    ["8", lambda : self.trackRating(8), "8"],
                    ["9", lambda : self.trackRating(9), "9"],
                    ["10", lambda : self.trackRating(10), "0"]]:
-                action = QtGui.QAction(self)
+                action = QtWidgets.QAction(self)
                 action.setText(act[0])
                 action.triggered.connect(act[1])
                 if len(act) == 3:
@@ -164,9 +163,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def showDBWarning(self):
         if CFG["regaudio"]["default"] == "True":
-            QtGui.QMessageBox.warning(self, "Default database",
+            QtWidgets.QMessageBox.warning(self, "Default database",
                     WARNMSG.format(CFGLOC, CFG["regaudio"]["db"])
-                    , buttons=QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
+                    , buttons=QtWidgets.QMessageBox.Ok, defaultButton=QtWidgets.QMessageBox.Ok)
 
     def statusupdate(self):
         self.statusline.setText(self.stats.status())
@@ -364,17 +363,17 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         import os.path
 
         if what == "mm":
-            source = QtGui.QFileDialog.getOpenFileName(self,
+            source = QtWidgets.QFileDialog.getOpenFileName(self,
                     caption='Select a MM file', directory=self.getlastdirectory(),
                     filter='Freemind files (*.mm);;All files (*.*)')
         elif what == "cue":
-            source = QtGui.QFileDialog.getOpenFileNames(self,
+            source = QtWidgets.QFileDialog.getOpenFileNames(self,
                     caption='Select a Cue file', directory=self.getlastdirectory(),
                     filter='Cue files (*.cue);;All files (*.*)')
         elif what == "dir":
-            source = QtGui.QFileDialog.getExistingDirectory(self,
+            source = QtWidgets.QFileDialog.getExistingDirectory(self,
                     caption='Select a directory to import', directory=self.getlastdirectory(),
-                    options=QtGui.QFileDialog.ShowDirsOnly)
+                    options=QtWidgets.QFileDialog.ShowDirsOnly)
 
         if source is None or len(source) == 0:
             return
@@ -387,10 +386,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         imp = ImportData(self.datamdl, source)
         what2, msg = imp.readdatapre(what, source)
         if what2:
-            result = QtGui.QMessageBox.question(self, "Importing data", msg
-                                                   , buttons=QtGui.QMessageBox.Yes | QtGui.QMessageBox.No
-                                                   , defaultButton=QtGui.QMessageBox.No)
-            if result == QtGui.QMessageBox.Yes:
+            result = QtWidgets.QMessageBox.question(self, "Importing data", msg
+                                                   , buttons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
+                                                   , defaultButton=QtWidgets.QMessageBox.No)
+            if result == QtWidgets.QMessageBox.Yes:
                 what = what2
 
         imp.readdata(what, source)
@@ -436,13 +435,13 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.filterSet()
 
     def groupNew(self):
-        groupname, ok = QtGui.QInputDialog.getText(self, "New group", "New group name:")
+        groupname, ok = QtWidgets.QInputDialog.getText(self, "New group", "New group name:")
         if not ok:
             return
         #newidx = self.groupbox.model().newGroup(groupname)
         newidx = self.groups.newGroup(groupname)
         if newidx == -1:
-            QtGui.QMessageBox.warning(self, "New group",
+            QtWidgets.QMessageBox.warning(self, "New group",
                     "Couldn't create the group! Such group already exists!")
             return
 
@@ -453,16 +452,16 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         fidx = self.filtergroups.index(self.groupbox.currentIndex(), 0)
         idx = self.filtergroups.mapToSource(fidx).row()
         if idx == 0:
-            QtGui.QMessageBox.warning(self, "A warning", "All Tracks is not a group", buttons=QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.NoButton)
+            QtWidgets.QMessageBox.warning(self, "A warning", "All Tracks is not a group", buttons=QtWidgets.QMessageBox.Ok, defaultButton=QtWidgets.QMessageBox.NoButton)
             return
 
         #mm = self.groupbox.model()
         name = self.groups.getGroup(idx).name
 
-        result = QtGui.QMessageBox.question(self, "Delete?", "Delete the group '" + name + "' ?"
-                                                   , buttons=QtGui.QMessageBox.Yes | QtGui.QMessageBox.No
-                                                   , defaultButton=QtGui.QMessageBox.No)
-        if result != QtGui.QMessageBox.Yes:
+        result = QtWidgets.QMessageBox.question(self, "Delete?", "Delete the group '" + name + "' ?"
+                                                   , buttons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
+                                                   , defaultButton=QtWidgets.QMessageBox.No)
+        if result != QtWidgets.QMessageBox.Yes:
             return
 
         self.groups.removeRows(idx, 1)
@@ -474,17 +473,17 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         idx = self.filtergroups.mapToSource(fidx)
         idx = idx.row()
         if idx == 0:
-            QtGui.QMessageBox.warning(self, "A warning",
+            QtWidgets.QMessageBox.warning(self, "A warning",
                     "All Tracks is not a group!",
-                    buttons=QtGui.QMessageBox.Ok,
-                    defaultButton=QtGui.QMessageBox.NoButton)
+                    buttons=QtWidgets.QMessageBox.Ok,
+                    defaultButton=QtWidgets.QMessageBox.NoButton)
             return
 
         #mm = self.groupbox.model()
         #name = mm.getGroup(self.groupbox.currentIndex()).name
         name = self.groups.getGroup(idx).name
 
-        groupname, ok = QtGui.QInputDialog.getText(self, "Rename group",
+        groupname, ok = QtWidgets.QInputDialog.getText(self, "Rename group",
                 "Change group name:" + " "*30, text=name)
         if not ok:
             return False
@@ -496,7 +495,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         #self.groups.setData(self.groups.index(idx, 0, QtCore.QModelIndex()), groupname, QtCore.Qt.EditRole)
         newidx = self.groups.renameGroup(idx, groupname)
         if newidx == None:
-            QtGui.QMessageBox.warning(self, "Rename group",
+            QtWidgets.QMessageBox.warning(self, "Rename group",
                     "Couldn't rename the group! Such group already exists!")
             return
         self.groupFocus(newidx)
@@ -506,10 +505,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         fidx = self.filtergroups.index(self.groupbox.currentIndex(), 0)
         idx = self.filtergroups.mapToSource(fidx).row()
         if idx == 0:
-            QtGui.QMessageBox.warning(self, "A warning",
+            QtWidgets.QMessageBox.warning(self, "A warning",
                     "All Tracks is not a group!",
-                    buttons=QtGui.QMessageBox.Ok,
-                    defaultButton=QtGui.QMessageBox.NoButton)
+                    buttons=QtWidgets.QMessageBox.Ok,
+                    defaultButton=QtWidgets.QMessageBox.NoButton)
             return
 
         newidx = self.groups.favorite(idx)
@@ -561,7 +560,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             # show picker of all the groups
             db = self.groups.dbmodel
             lst = db.getcaptions()
-            name, ok = QtGui.QInputDialog.getItem(self, "Pick a group",
+            name, ok = QtWidgets.QInputDialog.getItem(self, "Pick a group",
                     "Pick the group to add the tracks into",
                     lst, current=0, editable=False)
             # the captions don't include the All tracks group so ..
@@ -575,11 +574,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         if not d:
             return
 
-        result = QtGui.QMessageBox.question(self, "Add tracks to group", \
+        result = QtWidgets.QMessageBox.question(self, "Add tracks to group", \
                 "The tracks\n\t{}\nare already in that group?\n\nDo you wish to add them anyway?".format(dc), \
-                buttons=QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, \
-                defaultButton=QtGui.QMessageBox.No)
-        if result != QtGui.QMessageBox.Yes:
+                buttons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, \
+                defaultButton=QtWidgets.QMessageBox.No)
+        if result != QtWidgets.QMessageBox.Yes:
             return
         self.trackstable.model().dbmodel.addtogroup(d, gid, force=True)
         self.filterSet()
@@ -591,21 +590,21 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         rowsranges = utils.re_rangebyone(sorted(rows), count=True)
 
         if tt.model().dbmodel.gtmode:
-            result = QtGui.QMessageBox.question(self, "Delete grouptracks", \
+            result = QtWidgets.QMessageBox.question(self, "Delete grouptracks", \
                     "Delete just the selected group tracks (yes) or also the tracks (all)?", \
-                    buttons=QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.YesAll , \
-                    defaultButton=QtGui.QMessageBox.No)
+                    buttons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.YesAll , \
+                    defaultButton=QtWidgets.QMessageBox.No)
         else:
-            result = QtGui.QMessageBox.question(self, "Delete tracks", \
+            result = QtWidgets.QMessageBox.question(self, "Delete tracks", \
                     "PERMAMENTLY delete the selected tracks?", \
-                    buttons=QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, \
-                    defaultButton=QtGui.QMessageBox.No)
-        if result != QtGui.QMessageBox.Yes and result != QtGui.QMessageBox.YesAll:
+                    buttons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, \
+                    defaultButton=QtWidgets.QMessageBox.No)
+        if result != QtWidgets.QMessageBox.Yes and result != QtWidgets.QMessageBox.YesAll:
             return
 
         # delete tracks from bottom to keep the right indices
         for s, e in reversed(rowsranges):
-            tt.model().removeRows(s,e, trackstoo=(result == QtGui.QMessageBox.YesAll))
+            tt.model().removeRows(s,e, trackstoo=(result == QtWidgets.QMessageBox.YesAll))
 
     def trackNew(self):
         index = self.trackstable.selectionModel().currentIndex()
